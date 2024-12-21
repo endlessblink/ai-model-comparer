@@ -16,6 +16,12 @@ export interface AIModel {
   pricing_model: PricingModel
   pricing_type: PricingType
   api_available: boolean
+  useCases?: string[]
+  pricing?: {
+    free_tier?: string
+    paid_tier?: string
+    enterprise?: string
+  }
 }
 
 export const categoryNames: Record<ModelCategory, string> = {
@@ -128,6 +134,11 @@ export const defaultModels: AIModel[] = [
     pricing_model: 'freemium',
     pricing_type: 'usage-based',
     api_available: true,
+    pricing: {
+      free_tier: '500K טוקנים בחינם',
+      paid_tier: '$8 ל-1M טוקנים',
+      enterprise: 'תמחור מותאם'
+    }
   },
   {
     id: 'gpt4',
@@ -158,6 +169,10 @@ export const defaultModels: AIModel[] = [
     pricing_model: 'paid',
     pricing_type: 'usage-based',
     api_available: true,
+    pricing: {
+      paid_tier: '$0.03 ל-1K טוקנים',
+      enterprise: 'תמחור מותאם'
+    }
   },
   {
     id: 'midjourney',
@@ -188,6 +203,10 @@ export const defaultModels: AIModel[] = [
     pricing_model: 'paid',
     pricing_type: 'subscription',
     api_available: false,
+    pricing: {
+      paid_tier: '$10 לחודש בסיסי, $30 לחודש מתקדם',
+      enterprise: 'תמחור מותאם'
+    }
   },
   {
     id: 'dalle3',
@@ -198,26 +217,30 @@ export const defaultModels: AIModel[] = [
     icon: '/icons/dalle.svg',
     features: [
       'דיוק גבוה בפרטים',
-      'הבנת טקסט משופרת',
-      'שמירה על עקביות',
-      'תמיכה בסגנונות מרובים',
+      'הבנת טקסט מתקדמת',
+      'API זמין ונוח',
+      'מענה מדויק ומפורט',
     ],
     pros: [
-      'דיוק גבוה בפרטים',
-      'הבנת טקסט מעולה',
-      'API זמין ונוח',
+      'איכות תמונה מעולה',
       'אינטגרציה קלה',
+      'תמיכה נרחבת',
+      'עדכונים תכופים',
     ],
     cons: [
       'מחיר גבוה',
-      'הגבלות על תוכן',
-      'פחות גמיש ממידג\'ורני',
-      'זמן עיבוד ארוך',
+      'זמן עיבוד איטי',
+      'לא תמיד מדויק',
+      'תלות בחיבור לאינטרנט',
     ],
-    tags: ['איור', 'עיצוב', 'מציאותי', 'פורטרטים'],
+    tags: ['איור', 'עיצוב', 'מציאותי', 'אמנות'],
     pricing_model: 'paid',
     pricing_type: 'usage-based',
     api_available: true,
+    pricing: {
+      paid_tier: '$0.04 לתמונה רגילה, $0.08 לתמונה HD',
+      enterprise: 'תמחור מותאם'
+    }
   },
   {
     id: 'ideogram',
@@ -248,6 +271,11 @@ export const defaultModels: AIModel[] = [
     pricing_model: 'freemium',
     pricing_type: 'usage-based',
     api_available: true,
+    pricing: {
+      free_tier: '100K טוקנים בחינם',
+      paid_tier: '$5 ל-1M טוקנים',
+      enterprise: 'תמחור מותאם'
+    }
   },
   {
     id: 'stable-diffusion',
@@ -278,6 +306,11 @@ export const defaultModels: AIModel[] = [
     pricing_model: 'free',
     pricing_type: 'free',
     api_available: true,
+    pricing: {
+      free_tier: 'חינם',
+      paid_tier: 'לא זמין',
+      enterprise: 'לא זמין'
+    }
   },
   {
     id: 'runway-gen2',
@@ -307,7 +340,11 @@ export const defaultModels: AIModel[] = [
     tags: ['אנימציה', 'עריכת וידאו', 'אפקטים מיוחדים'],
     pricing_model: 'paid',
     pricing_type: 'subscription',
-    api_available: true
+    api_available: true,
+    pricing: {
+      paid_tier: '$50 לחודש בסיסי, $100 לחודש מתקדם',
+      enterprise: 'תמחור מותאם'
+    }
   },
   {
     id: 'pika-labs',
@@ -337,7 +374,12 @@ export const defaultModels: AIModel[] = [
     tags: ['אנימציה', 'סרטונים קצרים', 'פרסום'],
     pricing_model: 'freemium',
     pricing_type: 'usage-based',
-    api_available: false
+    api_available: false,
+    pricing: {
+      free_tier: '100K טוקנים בחינם',
+      paid_tier: '$10 ל-1M טוקנים',
+      enterprise: 'תמחור מותאם'
+    }
   },
   {
     id: 'mubert',
@@ -367,7 +409,12 @@ export const defaultModels: AIModel[] = [
     tags: ['הלחנה', 'מיקס', 'אפקטים'],
     pricing_model: 'freemium',
     pricing_type: 'subscription',
-    api_available: true
+    api_available: true,
+    pricing: {
+      free_tier: '100K טוקנים בחינם',
+      paid_tier: '$10 לחודש בסיסי, $20 לחודש מתקדם',
+      enterprise: 'תמחור מותאם'
+    }
   },
   {
     id: 'elevenlabs',
@@ -397,7 +444,12 @@ export const defaultModels: AIModel[] = [
     tags: ['קריינות', 'דיבוב', 'פודקאסטים'],
     pricing_model: 'freemium',
     pricing_type: 'usage-based',
-    api_available: true
+    api_available: true,
+    pricing: {
+      free_tier: '100K טוקנים בחינם',
+      paid_tier: '$5 ל-1M טוקנים',
+      enterprise: 'תמחור מותאם'
+    }
   },
   {
     id: 'synthesia',
@@ -427,9 +479,14 @@ export const defaultModels: AIModel[] = [
     tags: ['סנכרון דיבור', 'אווטארים', 'שידור חי'],
     pricing_model: 'enterprise',
     pricing_type: 'subscription',
-    api_available: true
+    api_available: true,
+    pricing: {
+      paid_tier: 'לא זמין',
+      enterprise: 'תמחור מותאם'
+    }
   }
 ]
+
 export async function getModels(category?: ModelCategory, filters?: {
   tags?: string[],
   pricingModel?: AIModel['pricing_model'],
@@ -483,4 +540,3 @@ export async function deleteModel(id: string) {
   console.log('Deleting model:', id)
   return Promise.resolve()
 }
-

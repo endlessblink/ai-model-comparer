@@ -34,9 +34,17 @@ export default function AddModel() {
     features: '',
     pros: '',
     cons: '',
-    pricing: '',
+    pricing: {
+      free_tier: '',
+      paid_tier: '',
+      enterprise: ''
+    },
     useCases: '',
+    alternatives: '',
+    api_available: false,
+    sourceDate: new Date().toISOString().split('T')[0]
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -44,6 +52,26 @@ export default function AddModel() {
 
   const handleSelectChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'שם המודל הוא שדה חובה';
+    }
+    if (!formData.category) {
+      newErrors.category = 'קטגוריה היא שדה חובה';
+    }
+    if (!formData.description.trim()) {
+      newErrors.description = 'תיאור הוא שדה חובה';
+    }
+    if (!formData.features.trim()) {
+      newErrors.features = 'תכונות הן שדה חובה';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleGenerateData = async () => {
@@ -65,13 +93,20 @@ export default function AddModel() {
       // Populate form fields with generated data
       const newFormData = {
         name: data.name || '',
-        category: 'יצירת תמונות', // Default category for Midjourney
+        category: data.category || 'יצירת תמונות',
         description: data.description || '',
         features: Array.isArray(data.features) ? data.features.join('\n') : '',
         pros: Array.isArray(data.pros) ? data.pros.join('\n') : '',
         cons: Array.isArray(data.cons) ? data.cons.join('\n') : '',
-        pricing: data.pricing?.free_tier ? 'freemium' : 'paid',
+        pricing: {
+          free_tier: data.pricing?.free_tier || '',
+          paid_tier: data.pricing?.paid_tier || '',
+          enterprise: data.pricing?.enterprise || ''
+        },
         useCases: Array.isArray(data.useCases) ? data.useCases.join('\n') : '',
+        alternatives: Array.isArray(data.alternatives) ? data.alternatives.join('\n') : '',
+        api_available: data.api_available || false,
+        sourceDate: data.sourceDate || new Date().toISOString().split('T')[0]
       };
 
       console.log('Setting form data to:', newFormData);
@@ -90,6 +125,15 @@ export default function AddModel() {
   };
 
   const handleSaveToDatabase = async () => {
+    if (!validateForm()) {
+      toast({
+        variant: "destructive",
+        title: "שגיאה",
+        description: "נא למלא את כל שדות החובה"
+      });
+      return;
+    }
+
     try {
       const modelData = {
         name: formData.name.trim(),
@@ -99,15 +143,14 @@ export default function AddModel() {
         pros: formData.pros.split('\n').filter(line => line.trim()),
         cons: formData.cons.split('\n').filter(line => line.trim()),
         pricing: {
-          free_tier: formData.pricing === 'free' ? 'Available' : undefined,
-          paid_tier: formData.pricing === 'paid' ? 'Available' : undefined,
-          enterprise: formData.pricing === 'enterprise' ? 'Available' : undefined,
+          free_tier: formData.pricing.free_tier,
+          paid_tier: formData.pricing.paid_tier,
+          enterprise: formData.pricing.enterprise
         },
-        use_cases: formData.useCases.split('\n').filter(line => line.trim()),
-        last_updated: new Date().toISOString().split('T')[0],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        api_available: true
+        useCases: formData.useCases.split('\n').filter(line => line.trim()),
+        alternatives: formData.alternatives.split('\n').filter(line => line.trim()),
+        api_available: formData.api_available,
+        sourceDate: formData.sourceDate
       };
 
       const { error } = await supabase.from('ai_models').insert([modelData]);
@@ -136,12 +179,11 @@ export default function AddModel() {
     setIsLoading(true);
 
     try {
-      // Validate required fields
-      if (!formData.name || !formData.category || !formData.description) {
+      if (!validateForm()) {
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Please fill in all required fields (name, category, and description)"
+          title: "שגיאה",
+          description: "נא למלא את כל שדות החובה"
         });
         return;
       }
@@ -154,14 +196,14 @@ export default function AddModel() {
         pros: formData.pros.split('\n').filter(line => line.trim()),
         cons: formData.cons.split('\n').filter(line => line.trim()),
         pricing: {
-          free_tier: formData.pricing === 'free' ? 'Available' : undefined,
-          paid_tier: formData.pricing === 'paid' ? 'Available' : undefined,
-          enterprise: formData.pricing === 'enterprise' ? 'Available' : undefined,
+          free_tier: formData.pricing.free_tier,
+          paid_tier: formData.pricing.paid_tier,
+          enterprise: formData.pricing.enterprise
         },
         useCases: formData.useCases.split('\n').filter(line => line.trim()),
-        alternatives: [],
-        sourceDate: new Date().toISOString(),
-        api_available: true
+        alternatives: formData.alternatives.split('\n').filter(line => line.trim()),
+        api_available: formData.api_available,
+        sourceDate: formData.sourceDate
       };
 
       const { error } = await supabase.from('ai_models').insert([modelData]);
@@ -181,8 +223,15 @@ export default function AddModel() {
         features: '',
         pros: '',
         cons: '',
-        pricing: '',
+        pricing: {
+          free_tier: '',
+          paid_tier: '',
+          enterprise: ''
+        },
         useCases: '',
+        alternatives: '',
+        api_available: false,
+        sourceDate: new Date().toISOString().split('T')[0]
       });
       setModelName('');
       setGeneratedData(null);
@@ -201,256 +250,303 @@ export default function AddModel() {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <Card>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label>שם המודל</Label>
-            <div className="flex gap-4">
-              <Input
-                className="flex-1"
-                placeholder="הכנס את שם המודל"
-                value={modelName}
-                onChange={(e) => setModelName(e.target.value)}
-              />
-              <Button
-                onClick={handleGenerateData}
-                disabled={isLoading}
-              >
-                {isLoading ? 'מייצר...' : 'יצירה אוטומטית'}
-              </Button>
-            </div>
-          </div>
+    <div className="container mx-auto p-6">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">הוספת מודל AI חדש</h1>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label>{SECTION_HEADERS.name}</Label>
-              <Input
-                placeholder="שם המודל"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>{SECTION_HEADERS.category}</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => handleSelectChange('category', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="בחר קטגוריה" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="מודלי שפה">מודלי שפה</SelectItem>
-                    <SelectItem value="יצירת תמונות">יצירת תמונות</SelectItem>
-                    <SelectItem value="יצירת קוד">יצירת קוד</SelectItem>
-                    <SelectItem value="עיבוד קול">עיבוד קול</SelectItem>
-                    <SelectItem value="אחר">אחר</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{SECTION_HEADERS.description}</Label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                rows={4}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>{SECTION_HEADERS.features}</Label>
-              <Textarea
-                value={formData.features}
-                onChange={(e) => handleInputChange('features', e.target.value)}
-                placeholder="הזן תכונות, כל אחת בשורה חדשה"
-                rows={4}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{SECTION_HEADERS.pros}</Label>
-                <Textarea
-                  value={formData.pros}
-                  onChange={(e) => handleInputChange('pros', e.target.value)}
-                  placeholder="הזן יתרונות, כל אחד בשורה חדשה"
-                  rows={4}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{SECTION_HEADERS.cons}</Label>
-                <Textarea
-                  value={formData.cons}
-                  onChange={(e) => handleInputChange('cons', e.target.value)}
-                  placeholder="הזן חסרונות, כל אחד בשורה חדשה"
-                  rows={4}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="pricing">תמחור</Label>
-                <Select
-                  value={formData.pricing}
-                  onValueChange={(value) => {
-                    console.log('Updating pricing with selected value:', value);
-                    setFormData(prev => ({ ...prev, pricing: value }));
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="בחר תמחור" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="free">חינמי</SelectItem>
-                    <SelectItem value="freemium">פרימיום</SelectItem>
-                    <SelectItem value="paid">בתשלום</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{SECTION_HEADERS.useCases}</Label>
-                <Textarea
-                  value={formData.useCases}
-                  onChange={(e) => handleInputChange('useCases', e.target.value)}
-                  placeholder="הזן שימושים, כל אחד בשורה חדשה"
-                  rows={4}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-4">
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'שומר...' : 'שמור'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {showPreview && generatedData && (
-        <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Generated Data Preview</DialogTitle>
-              <DialogDescription>
-                Review the generated data before confirming
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-4">
               <div>
-                <h3 className="font-medium">{SECTION_HEADERS.name}</h3>
-                <p>{generatedData.name}</p>
-              </div>
-
-              <div>
-                <h3 className="font-medium">{SECTION_HEADERS.description}</h3>
-                <p>{generatedData.description}</p>
-              </div>
-
-              <div>
-                <h3 className="font-medium">{SECTION_HEADERS.features}</h3>
-                <ul className="list-disc pl-5">
-                  {generatedData.features.map((feature, index) => (
-                    <li key={index}>{feature}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-medium">{SECTION_HEADERS.pricing}</h3>
-                <div className="space-y-2">
-                  {generatedData.pricing.free_tier && (
-                    <p>{SECTION_HEADERS.free_tier}: {generatedData.pricing.free_tier}</p>
-                  )}
-                  {generatedData.pricing.paid_tier && (
-                    <p>{SECTION_HEADERS.paid_tier}: {generatedData.pricing.paid_tier}</p>
-                  )}
-                  {generatedData.pricing.enterprise && (
-                    <p>{SECTION_HEADERS.enterprise}: {generatedData.pricing.enterprise}</p>
-                  )}
+                <Label>שם המודל</Label>
+                <div className="flex gap-4">
+                  <Input
+                    className="flex-1"
+                    placeholder="הכנס את שם המודל"
+                    value={modelName}
+                    onChange={(e) => setModelName(e.target.value)}
+                  />
+                  <Button
+                    onClick={handleGenerateData}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'מייצר...' : 'יצירה אוטומטית'}
+                  </Button>
                 </div>
               </div>
 
-              <div>
-                <h3 className="font-medium">{SECTION_HEADERS.pros}</h3>
-                <ul className="list-disc pl-5">
-                  {generatedData.pros.map((pro, index) => (
-                    <li key={index}>{pro}</li>
-                  ))}
-                </ul>
-              </div>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="name" className={errors.name ? 'text-destructive' : ''}>
+                      {SECTION_HEADERS.name} *
+                    </Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      className={errors.name ? 'border-destructive' : ''}
+                    />
+                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                  </div>
 
-              <div>
-                <h3 className="font-medium">{SECTION_HEADERS.cons}</h3>
-                <ul className="list-disc pl-5">
-                  {generatedData.cons.map((con, index) => (
-                    <li key={index}>{con}</li>
-                  ))}
-                </ul>
-              </div>
+                  <div>
+                    <Label htmlFor="category" className={errors.category ? 'text-destructive' : ''}>
+                      {SECTION_HEADERS.category} *
+                    </Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) => handleSelectChange('category', value)}
+                    >
+                      <SelectTrigger className={errors.category ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="בחר קטגוריה" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="יצירת תמונות">יצירת תמונות</SelectItem>
+                          <SelectItem value="עיבוד טקסט">עיבוד טקסט</SelectItem>
+                          <SelectItem value="עיבוד קול">עיבוד קול</SelectItem>
+                          <SelectItem value="עיבוד וידאו">עיבוד וידאו</SelectItem>
+                          <SelectItem value="אחר">אחר</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    {errors.category && <p className="text-sm text-destructive">{errors.category}</p>}
+                  </div>
 
-              <div>
-                <h3 className="font-medium">{SECTION_HEADERS.useCases}</h3>
-                <ul className="list-disc pl-5">
-                  {generatedData.useCases.map((useCase, index) => (
-                    <li key={index}>{useCase}</li>
-                  ))}
-                </ul>
-              </div>
+                  <div>
+                    <Label htmlFor="description" className={errors.description ? 'text-destructive' : ''}>
+                      {SECTION_HEADERS.description} *
+                    </Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      className={errors.description ? 'border-destructive' : ''}
+                    />
+                    {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                  </div>
 
-              <div>
-                <h3 className="font-medium">{SECTION_HEADERS.alternatives}</h3>
-                <ul className="list-disc pl-5">
-                  {generatedData.alternatives.map((alternative, index) => (
-                    <li key={index}>{alternative}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+                  <div>
+                    <Label>{SECTION_HEADERS.features}</Label>
+                    <Textarea
+                      value={formData.features}
+                      onChange={(e) => handleInputChange('features', e.target.value)}
+                      placeholder="הזן תכונות, כל אחת בשורה חדשה"
+                      rows={4}
+                    />
+                  </div>
 
-            <DialogFooter className="flex gap-3 justify-end mt-6">
-              <Button
-                variant="outline"
-                onClick={() => setShowPreview(false)}
-                className="min-w-[100px] hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                ביטול
-              </Button>
-              <Button
-                onClick={async () => {
-                  try {
-                    setIsLoading(true);
-                    await handleSaveToDatabase();
-                    setShowPreview(false);
-                  } catch (error) {
-                    console.error('Error saving data:', error);
-                    toast({
-                      variant: "destructive",
-                      title: "שגיאה",
-                      description: "שגיאה בשמירת הנתונים"
-                    });
-                  } finally {
-                    setIsLoading(false);
-                  }
-                }}
-                disabled={isLoading}
-                className="min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white font-medium"
-              >
-                {isLoading ? "שומר..." : "אישור ושמירה"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="free_tier">{SECTION_HEADERS.free_tier}</Label>
+                      <Input
+                        id="free_tier"
+                        value={formData.pricing.free_tier}
+                        onChange={(e) => handleInputChange('pricing.free_tier', e.target.value)}
+                        placeholder="חינמי"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="paid_tier">{SECTION_HEADERS.paid_tier}</Label>
+                      <Input
+                        id="paid_tier"
+                        value={formData.pricing.paid_tier}
+                        onChange={(e) => handleInputChange('pricing.paid_tier', e.target.value)}
+                        placeholder="בתשלום"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="enterprise">{SECTION_HEADERS.enterprise}</Label>
+                      <Input
+                        id="enterprise"
+                        value={formData.pricing.enterprise}
+                        onChange={(e) => handleInputChange('pricing.enterprise', e.target.value)}
+                        placeholder="ארגוני"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="api_available">API זמין</Label>
+                    <input
+                      type="checkbox"
+                      id="api_available"
+                      checked={formData.api_available}
+                      onChange={(e) => handleInputChange('api_available', e.target.checked.toString())}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{SECTION_HEADERS.pros}</Label>
+                      <Textarea
+                        value={formData.pros}
+                        onChange={(e) => handleInputChange('pros', e.target.value)}
+                        placeholder="הזן יתרונות, כל אחד בשורה חדשה"
+                        rows={4}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>{SECTION_HEADERS.cons}</Label>
+                      <Textarea
+                        value={formData.cons}
+                        onChange={(e) => handleInputChange('cons', e.target.value)}
+                        placeholder="הזן חסרונות, כל אחד בשורה חדשה"
+                        rows={4}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{SECTION_HEADERS.useCases}</Label>
+                    <Textarea
+                      value={formData.useCases}
+                      onChange={(e) => handleInputChange('useCases', e.target.value)}
+                      placeholder="הזן שימושים, כל אחד בשורה חדשה"
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{SECTION_HEADERS.alternatives}</Label>
+                    <Textarea
+                      value={formData.alternatives}
+                      onChange={(e) => handleInputChange('alternatives', e.target.value)}
+                      placeholder="הזן חלופות, כל אחד בשורה חדשה"
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-4">
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? 'שומר...' : 'שמור'}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </CardContent>
+          </Card>
+
+          {showPreview && (
+            <Dialog open={showPreview} onOpenChange={setShowPreview}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>תצוגה מקדימה</DialogTitle>
+                  <DialogDescription>
+                    אנא בדוק את הנתונים לפני השמירה
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">{SECTION_HEADERS.name}</h3>
+                    <p>{generatedData?.name}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium">{SECTION_HEADERS.description}</h3>
+                    <p>{generatedData?.description}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium">{SECTION_HEADERS.features}</h3>
+                    <ul className="list-disc pl-5">
+                      {generatedData?.features?.map((feature, index) => (
+                        <li key={index}>{feature}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium">{SECTION_HEADERS.pricing}</h3>
+                    <div className="space-y-2">
+                      {generatedData?.pricing?.free_tier && (
+                        <p>{SECTION_HEADERS.free_tier}: {generatedData.pricing.free_tier}</p>
+                      )}
+                      {generatedData?.pricing?.paid_tier && (
+                        <p>{SECTION_HEADERS.paid_tier}: {generatedData.pricing.paid_tier}</p>
+                      )}
+                      {generatedData?.pricing?.enterprise && (
+                        <p>{SECTION_HEADERS.enterprise}: {generatedData.pricing.enterprise}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium">{SECTION_HEADERS.pros}</h3>
+                    <ul className="list-disc pl-5">
+                      {generatedData?.pros?.map((pro, index) => (
+                        <li key={index}>{pro}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium">{SECTION_HEADERS.cons}</h3>
+                    <ul className="list-disc pl-5">
+                      {generatedData?.cons?.map((con, index) => (
+                        <li key={index}>{con}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium">{SECTION_HEADERS.useCases}</h3>
+                    <ul className="list-disc pl-5">
+                      {generatedData?.useCases?.map((useCase, index) => (
+                        <li key={index}>{useCase}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium">{SECTION_HEADERS.alternatives}</h3>
+                    <ul className="list-disc pl-5">
+                      {generatedData?.alternatives?.map((alternative, index) => (
+                        <li key={index}>{alternative}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <DialogFooter className="flex gap-3 justify-end mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowPreview(false)}
+                    className="min-w-[100px] hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    ביטול
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        setIsLoading(true);
+                        await handleSaveToDatabase();
+                        setShowPreview(false);
+                      } catch (error) {
+                        console.error('Error saving data:', error);
+                        toast({
+                          variant: "destructive",
+                          title: "שגיאה",
+                          description: "שגיאה בשמירת הנתונים"
+                        });
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
+                    disabled={isLoading}
+                    className="min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                  >
+                    {isLoading ? "שומר..." : "אישור ושמירה"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

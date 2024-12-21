@@ -32,27 +32,33 @@ const ModelCard = ({ model, onEdit, onDelete, isAdmin }: { model: AIModel } & Pi
   return (
     <div 
       className={cn(
-        "group relative rounded-2xl bg-[#1a1a1a] transition-all duration-300",
+        "group relative rounded-2xl bg-[#1a1a1a] transition-all duration-300 min-h-[280px]",
         isExpanded ? "scale-[1.02] z-10 shadow-lg" : "hover:scale-[1.02]"
       )}
     >
       <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-purple-600/0 via-blue-600/0 to-cyan-500/0 opacity-0 blur transition-all duration-300 group-hover:from-purple-600/50 group-hover:via-blue-600/50 group-hover:to-cyan-500/50 group-hover:opacity-100" />
       
-      <div className="relative flex h-full flex-col gap-4 rounded-2xl bg-[#1a1a1a] p-6">
+      <div className="relative flex h-full flex-col gap-6 rounded-2xl bg-[#1a1a1a] p-8">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] p-2.5 shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] p-3 shadow-lg">
               <div className="absolute inset-0.5 rounded-[10px] bg-gradient-to-br from-purple-500/10 to-cyan-500/10" />
               <ModelFavicon 
                 name={model.name} 
                 url={model.url} 
-                size={28}
+                size={36}
                 className="rounded-lg bg-[#1a1a1a]"
               />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold text-white">{model.name}</h3>
+              <div className="flex items-center gap-3">
+                <h3 className="text-2xl font-semibold text-white">{model.name}</h3>
+                {model.pricing && (
+                  <Badge variant="secondary" className="text-sm px-3 py-1 bg-gray-800/50">
+                    {model.pricing.free_tier && model.pricing.paid_tier ? 'Freemium' :
+                     model.pricing.free_tier ? 'Free' : 'Paid Only'}
+                  </Badge>
+                )}
                 {model.url && (
                   <a
                     href={model.url}
@@ -60,11 +66,11 @@ const ModelCard = ({ model, onEdit, onDelete, isAdmin }: { model: AIModel } & Pi
                     rel="noopener noreferrer"
                     className="text-gray-400 hover:text-white transition-colors"
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="h-5 w-5" />
                   </a>
                 )}
               </div>
-              <p className="text-sm text-gray-400">{model.description}</p>
+              <p className="text-base text-gray-400 mt-2 leading-relaxed">{model.description}</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -72,7 +78,7 @@ const ModelCard = ({ model, onEdit, onDelete, isAdmin }: { model: AIModel } & Pi
               <AddModelDialog
                 initialData={model}
                 onModelAdded={onEdit}
-                trigger={
+                trigger={(
                   <Button
                     variant="ghost"
                     size="icon"
@@ -81,24 +87,9 @@ const ModelCard = ({ model, onEdit, onDelete, isAdmin }: { model: AIModel } & Pi
                   >
                     <Bookmark className="h-5 w-5" />
                   </Button>
-                }
+                )}
               />
             )}
-            <Button
-              variant="ghost"
-              size="icon" 
-              className="text-gray-400 transition-colors hover:text-white"
-              onClick={(e) => {
-                e.stopPropagation()
-                setIsExpanded(!isExpanded)
-              }}
-            >
-              {isExpanded ? (
-                <ChevronUp className="h-5 w-5" />
-              ) : (
-                <ChevronDown className="h-5 w-5" />
-              )}
-            </Button>
             {isAdmin && (
               <Button 
                 variant="ghost" 
@@ -116,101 +107,95 @@ const ModelCard = ({ model, onEdit, onDelete, isAdmin }: { model: AIModel } & Pi
             )}
           </div>
         </div>
-        
-        <div className={cn(
-          "relative transition-all duration-300",
-          isExpanded ? "h-auto" : "h-[4.5rem] overflow-hidden"
-        )}>
-          <p className="text-sm leading-relaxed text-gray-400">{model.description}</p>
-          {!isExpanded && (
-            <div className="absolute bottom-0 h-6 w-full bg-gradient-to-t from-[#1a1a1a] to-transparent" />
-          )}
-        </div>
-        
-        <div className={cn(
-          "space-y-3 transition-all duration-300",
-          isExpanded ? "opacity-100" : "opacity-70"
-        )}>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <h4 className="text-xs font-medium text-emerald-500">יתרונות</h4>
-              <ul className="space-y-1">
-                {model.pros.map((pro, index) => (
-                  <li key={index} className="flex items-center gap-1.5 text-xs text-gray-400">
-                    <div className="h-1 w-1 rounded-full bg-emerald-500/50" />
-                    {pro}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="space-y-1.5">
-              <h4 className="text-xs font-medium text-red-500">חסרונות</h4>
-              <ul className="space-y-1">
-                {model.cons.map((con, index) => (
-                  <li key={index} className="flex items-center gap-1.5 text-xs text-gray-400">
-                    <div className="h-1 w-1 rounded-full bg-red-500/50" />
-                    {con}
-                  </li>
-                ))}
-              </ul>
+
+        <div className="space-y-6">
+          <div>
+            <h4 className="text-lg font-medium text-gray-300 mb-2">יתרונות וחסרונות</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h5 className="text-base font-medium text-gray-400 mb-1">יתרונות</h5>
+                <ul className="list-disc list-inside space-y-1">
+                  {model.pros?.map((pro, index) => (
+                    <li key={index} className="text-base text-gray-400">{pro}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h5 className="text-base font-medium text-gray-400 mb-1">חסרונות</h5>
+                <ul className="list-disc list-inside space-y-1">
+                  {model.cons?.map((con, index) => (
+                    <li key={index} className="text-base text-gray-400">{con}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
-          
-          {model.features && model.features.length > 0 && (
-            <div className="space-y-1.5">
-              <h4 className="text-xs font-medium text-gray-500">תכונות עיקריות</h4>
-              <ul className="grid grid-cols-2 gap-1">
-                {model.features.map((feature, index) => (
-                  <li key={index} className="flex items-center gap-1.5 text-xs text-gray-400">
-                    <div className="h-1 w-1 rounded-full bg-purple-500/50" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+
+          <Button
+            onClick={() => setIsExpanded(!isExpanded)}
+            variant="ghost"
+            className="w-full text-gray-400 hover:text-gray-300"
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4 ml-2" />
+            ) : (
+              <ChevronDown className="h-4 w-4 ml-2" />
+            )}
+            {isExpanded ? "הצג פחות" : "הצג עוד"}
+          </Button>
+
+          {isExpanded && (
+            <div className="space-y-6 mt-4">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-lg font-medium text-gray-300 mb-2">תכונות</h4>
+                  {model.features && model.features.length > 0 && (
+                    <ul className="list-disc list-inside space-y-1">
+                      {model.features.map((feature, index) => (
+                        <li key={index} className="text-base text-gray-400">{feature}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-lg font-medium text-gray-300 mb-2">שימושים נפוצים</h4>
+                  {model.useCases && model.useCases.length > 0 && (
+                    <ul className="list-disc list-inside space-y-1">
+                      {model.useCases.map((useCase, index) => (
+                        <li key={index} className="text-base text-gray-400">{useCase}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              {model.pricing && (
+                <div>
+                  <h4 className="text-lg font-medium text-gray-300 mb-2">תמחור</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {model.pricing.free_tier && (
+                      <Badge variant="outline" className="text-base px-4 py-1">
+                        חינמי: {model.pricing.free_tier}
+                      </Badge>
+                    )}
+                    {model.pricing.paid_tier && (
+                      <Badge variant="outline" className="text-base px-4 py-1">
+                        בתשלום: {model.pricing.paid_tier}
+                      </Badge>
+                    )}
+                    {model.pricing.enterprise && (
+                      <Badge variant="outline" className="text-base px-4 py-1">
+                        ארגוני: {model.pricing.enterprise}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
-          
-          <div className="flex flex-wrap gap-1.5">
-            {model.tags?.map((tag) => (
-              <Badge
-                key={tag}
-                variant="outline"
-                className="border-[#2a2a2a] bg-[#1f1f1f] px-2 py-0.5 text-xs font-normal text-gray-400 transition-colors hover:border-purple-500/30 hover:text-gray-300"
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
         </div>
-        
-        <div className="mt-auto flex items-center justify-between gap-2 pt-4">
-          {model.url && (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="h-8 flex-1 gap-1.5 px-3 text-sm font-normal text-gray-400 transition-colors hover:bg-[#2a2a2a] hover:text-white"
-              asChild
-              onClick={(e) => e.stopPropagation()}
-            >
-              <a href={model.url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-3.5 w-3.5" />
-                פתח אתר
-              </a>
-            </Button>
-          )}
-          {isAdmin && (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="h-8 flex-1 gap-1.5 px-3 text-sm font-normal text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete(model.id)
-              }}
-            >
-              מחק מודל
-            </Button>
-          )}
+
+        <div className="flex justify-center mt-auto">
         </div>
       </div>
     </div>
