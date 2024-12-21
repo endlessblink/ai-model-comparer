@@ -1,11 +1,10 @@
 interface ModelFaviconProps {
   name: string;
-  url: string;
   size?: number;
   className?: string;
 }
 
-export default function ModelFavicon({ name, url, size = 32, className = '' }: ModelFaviconProps) {
+export default function ModelFavicon({ name, size = 32, className = '' }: ModelFaviconProps) {
   return (
     <img 
       src={`/model-favicons/${name.toLowerCase().replace(/\s+/g, '-')}.png`}

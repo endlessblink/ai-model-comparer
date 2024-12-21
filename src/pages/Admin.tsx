@@ -1,10 +1,9 @@
-import React from 'react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Model } from '@/types/models'
+import type { AIModel } from '@/types/models'
 import { ModelDialog } from '@/components/ModelDialog'
 import { useToast } from '@/components/ui/use-toast'
 import {
@@ -20,8 +19,8 @@ import {
 
 export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState(false)
-  const [models, setModels] = useState<Model[]>([])
-  const [modelToDelete, setModelToDelete] = useState<Model | null>(null)
+  const [models, setModels] = useState<AIModel[]>([])
+  const [modelToDelete, setModelToDelete] = useState<AIModel | null>(null)
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -74,7 +73,7 @@ export default function AdminPage() {
     }
   }
 
-  async function handleDelete(model: Model) {
+  async function handleDelete(model: AIModel) {
     try {
       const { error } = await supabase
         .from('models')
