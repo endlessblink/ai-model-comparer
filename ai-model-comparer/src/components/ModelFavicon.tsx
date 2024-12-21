@@ -16,53 +16,75 @@ export const ModelFavicon: React.FC<ModelFaviconProps> = ({
     className 
 }) => {
     const [faviconUrl, setFaviconUrl] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(false);
 
     useEffect(() => {
+        let mounted = true;
+
         const loadFavicon = async () => {
             try {
-                const favicon = await getFaviconForModel({ name, url });
-                setFaviconUrl(favicon);
+                setIsLoading(true);
                 setError(false);
+                const favicon = await getFaviconForModel({ name, url });
+                if (mounted) {
+                    setFaviconUrl(favicon);
+                    setError(false);
+                }
             } catch (err) {
                 console.error('Error loading favicon:', err);
-                setError(true);
+                if (mounted) {
+                    setError(true);
+                }
+            } finally {
+                if (mounted) {
+                    setIsLoading(false);
+                }
             }
         };
 
         loadFavicon();
+
+        return () => {
+            mounted = false;
+        };
     }, [name, url]);
 
-    if (!faviconUrl || error) {
+    if (isLoading) {
         return (
             <div 
                 className={cn(
-                    "flex items-center justify-center text-xs font-medium text-gray-400",
+                    "animate-pulse bg-gray-700 rounded-lg",
+                    className
+                )} 
+                style={{ width: size, height: size }}
+            />
+        );
+    }
+
+    if (!faviconUrl || error) {
+        // Return fallback icon
+        return (
+            <div 
+                className={cn(
+                    "flex items-center justify-center bg-gray-800 rounded-lg text-white font-bold",
                     className
                 )}
                 style={{ width: size, height: size }}
             >
-                {name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase()}
+                {name.substring(0, 1).toUpperCase()}
             </div>
         );
     }
 
     return (
-        <div 
-            className={cn(
-                "relative flex items-center justify-center overflow-hidden",
-                className
-            )}
+        <img
+            src={faviconUrl}
+            alt={`${name} icon`}
+            className={cn("rounded-lg object-contain", className)}
             style={{ width: size, height: size }}
-        >
-            <img
-                src={faviconUrl}
-                alt={`${name} favicon`}
-                className="w-full h-full object-contain p-1"
-                onError={() => setError(true)}
-                loading="lazy"
-            />
-        </div>
+            onError={() => setError(true)}
+        />
     );
 };
 

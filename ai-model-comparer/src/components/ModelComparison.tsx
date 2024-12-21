@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { type ModelCategory, categoryNames, defaultModels, pricingModels, commonModelTags } from '@/data/models'
+import { useState, useEffect } from 'react'
+import { type ModelCategory, categoryNames, pricingModels, commonModelTags, type AIModel } from '@/data/models'
+import { supabase } from '@/lib/supabase'
 import ComparisonTable from './ComparisonTable'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -15,10 +16,35 @@ export default function ModelComparison() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [isAdmin] = useState(false)
+  const [models, setModels] = useState<AIModel[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   const availableTags = commonModelTags[selectedCategory] || []
 
-  const filteredModels = defaultModels.filter(model => {
+  useEffect(() => {
+    fetchModels()
+  }, [])
+
+  const fetchModels = async () => {
+    try {
+      setIsLoading(true)
+      const { data, error } = await supabase
+        .from('ai_models')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      setModels(data || [])
+    } catch (error) {
+      console.error('Error fetching models:', error)
+      setModels([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const filteredModels = models.filter(model => {
     // Category filter
     if (model.category !== selectedCategory) return false
     
@@ -111,7 +137,7 @@ export default function ModelComparison() {
                 >
                   <span>{name}</span>
                   <Badge variant="secondary" className="mr-2 bg-gray-800/50 text-gray-400">
-                    {defaultModels.filter(m => m.category === key).length}
+                    {models.filter(m => m.category === key).length}
                   </Badge>
                 </TabsTrigger>
               ))}
@@ -166,4 +192,4 @@ export default function ModelComparison() {
       </div>
     </div>
   )
-} 
+}

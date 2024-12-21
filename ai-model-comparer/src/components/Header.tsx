@@ -1,39 +1,55 @@
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { ModeToggle } from './mode-toggle';
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { ModeToggle } from '@/components/mode-toggle'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Header() {
-  const { session, signOut } = useAuth();
+  const { session, signOut } = useAuth()
 
   return (
-    <header className="w-full border-b">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+    <header className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-xl font-bold">AI Model Comparer</span>
+          <Link to="/" className="text-lg font-bold">
+            AI Model Comparer
           </Link>
-          <nav className="flex gap-4">
-            <Link to="/">השוואת מודלים</Link>
-            {session && <Link to="/admin/update-models">ניהול מודלים</Link>}
+          <nav className="flex items-center gap-6 text-sm font-medium">
+            <Link to="/compare" className="text-foreground/60 hover:text-foreground transition-colors">
+              השוואת מודלים
+            </Link>
+            <Link to="/about" className="text-foreground/60 hover:text-foreground transition-colors">
+              אודות
+            </Link>
+            {session && (
+              <Link to="/admin" className="text-foreground/60 hover:text-foreground transition-colors">
+                ניהול
+              </Link>
+            )}
           </nav>
         </div>
+
         <div className="flex items-center gap-4">
           <ModeToggle />
           {session ? (
-            <div className="flex gap-4">
-              <Link to="/admin/add-model">
-                <Button variant="outline">הוספת מודל חדש</Button>
+            <div className="flex items-center gap-4">
+              <Link to="/admin/add">
+                <Button variant="outline" size="sm">הוספת מודל חדש</Button>
               </Link>
-              <Button variant="ghost" onClick={() => signOut()}>התנתק</Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => signOut()}
+              >
+                התנתק
+              </Button>
             </div>
           ) : (
             <Link to="/login">
-              <Button variant="outline">התחבר</Button>
+              <Button variant="outline" size="sm">התחבר</Button>
             </Link>
           )}
         </div>
       </div>
     </header>
-  );
+  )
 }

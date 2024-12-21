@@ -13,31 +13,66 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    fetchModels()
-  }, [])
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/');
+        return;
+      }
+      
+      // Check if user is admin
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError || !profile?.is_admin) {
+        navigate('/');
+        return;
+      }
+
+      fetchModels();
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const fetchModels = async () => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('ai_models')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
 
-      if (error) throw error
+      if (error) throw error;
 
-      setModels(data || [])
+      console.log('Models from database:', data);
+      
+      // Remove duplicates based on name
+      const uniqueModels = data?.reduce((acc: AIModel[], current: AIModel) => {
+        const x = acc.find(item => item.name === current.name);
+        if (!x) {
+          return acc.concat([current]);
+        } else {
+          return acc;
+        }
+      }, []) || [];
+
+      console.log('Unique models:', uniqueModels);
+      setModels(uniqueModels);
     } catch (error) {
-      console.error('Error fetching models:', error)
+      console.error('Error fetching models:', error);
       toast({
         variant: "destructive",
         title: "שגיאה",
         description: "שגיאה בטעינת המודלים"
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleAddModel = () => {
     navigate('/admin/add')
@@ -48,14 +83,14 @@ export default function Dashboard() {
   }
 
   const handleDeleteModel = async (model: AIModel) => {
-    if (!window.confirm(`האם אתה בטוח שברצונך למחוק את ${model.name}?`)) {
+    if (!window.confirm(`האם אתה בטוח שברצון למחוק את ${model.name}?`)) {
       return
     }
 
     try {
       const { error } = await supabase
         .from('ai_models')
-        .update({ is_deleted: true })
+        .delete()
         .eq('id', model.id)
 
       if (error) throw error
