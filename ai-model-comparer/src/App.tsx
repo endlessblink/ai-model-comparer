@@ -1,34 +1,56 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 import Home from '@/pages/Index'
 import ComparisonPage from '@/pages/Compare'
+import Dashboard from '@/pages/admin/Dashboard'
+import AddModel from '@/pages/admin/AddModel'
+import AdminSetup from '@/pages/admin/Setup'
 import { Button } from '@/components/ui/button'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-// Layout component to wrap all routes
+function App() {
+  return (
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <Router>
+        <Layout />
+      </Router>
+      <Toaster />
+    </ThemeProvider>
+  )
+}
+
 function Layout() {
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    async function checkAdmin() {
+    checkAdminStatus()
+  }, [])
+
+  const checkAdminStatus = async () => {
+    try {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('is_admin')
           .eq('id', user.id)
           .single()
-        
-        setIsAdmin(!!data?.is_admin)
+
+        setIsAdmin(!!profile?.is_admin)
       }
+    } catch (error) {
+      console.error('Error checking admin status:', error)
+    } finally {
+      setIsLoading(false)
     }
-    
-    checkAdmin()
-  }, [])
+  }
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">טוען...</div>
+  }
 
   return (
     <div dir="rtl" className="min-h-screen bg-gradient-to-b from-[#0A0B14] via-[#0d0e1a] to-[#0A0B14] text-white">
@@ -80,7 +102,7 @@ function Layout() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/compare" element={<ComparisonPage />} />
-          <Route path="/about" element={
+          <Route path="/about" element={(
             <div className="container mx-auto px-4 py-8">
               <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-blue-400 to-purple-400 inline-block text-transparent bg-clip-text">
                 אודות
@@ -89,8 +111,8 @@ function Layout() {
                 עמוד זה בבנייה...
               </p>
             </div>
-          } />
-          <Route path="/contact" element={
+          )} />
+          <Route path="/contact" element={(
             <div className="container mx-auto px-4 py-8">
               <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-blue-400 to-purple-400 inline-block text-transparent bg-clip-text">
                 צור קשר
@@ -99,20 +121,24 @@ function Layout() {
                 עמוד זה בבנייה...
               </p>
             </div>
-          } />
+          )} />
+          {/* Admin Routes */}
+          <Route 
+            path="/admin/setup" 
+            element={<AdminSetup />} 
+          />
+          <Route 
+            path="/admin" 
+            element={isAdmin ? <Dashboard /> : <Navigate to="/admin/setup" replace />} 
+          />
+          <Route 
+            path="/admin/add" 
+            element={isAdmin ? <AddModel /> : <Navigate to="/admin/setup" replace />} 
+          />
         </Routes>
       </main>
     </div>
   )
 }
 
-export default function App() {
-  return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <Router>
-        <Layout />
-      </Router>
-      <Toaster />
-    </ThemeProvider>
-  )
-}
+export default App
