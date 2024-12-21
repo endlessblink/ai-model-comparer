@@ -17,8 +17,14 @@ export interface ModelData {
 }
 
 export const SECTION_HEADERS = {
+  name: 'שם',
+  category: 'קטגוריה',
+  description: 'תיאור',
   features: 'תכונות עיקריות',
   pricing: 'תמחור',
+  free_tier: 'חינמי',
+  paid_tier: 'בתשלום',
+  enterprise: 'ארגוני',
   pros: 'יתרונות',
   cons: 'חסרונות',
   useCases: 'שימושים נפוצים',

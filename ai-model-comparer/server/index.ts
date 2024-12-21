@@ -47,8 +47,7 @@ if (!apiKey) {
 console.log('Initializing Anthropic client with API key:', apiKey.substring(0, 10) + '...');
 
 const anthropic = new Anthropic({
-  apiKey: apiKey,
-  dangerouslyAllowBrowser: true
+  apiKey: apiKey
 });
 
 // Health check endpoint

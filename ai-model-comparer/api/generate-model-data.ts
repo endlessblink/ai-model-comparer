@@ -1,8 +1,8 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -29,15 +29,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       Format the response as structured data that can be parsed as JSON.
     `;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await anthropic.messages.create({
+      model: "claude-3-sonnet-20240229",
+      max_tokens: 4096,
       messages: [{ role: "user", content: prompt }],
-      model: "gpt-4-turbo-preview",
-      response_format: { type: "json_object" },
+      system: "You are a helpful AI assistant that provides information about AI models and tools. Return responses in JSON format."
     });
 
-    const response = completion.choices[0].message.content;
+    const response = completion.content[0].text;
     if (!response) {
-      return res.status(500).json({ error: 'No response from OpenAI' });
+      return res.status(500).json({ error: 'No response from Anthropic' });
     }
 
     return res.status(200).json(JSON.parse(response));

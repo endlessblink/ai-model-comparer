@@ -1,10 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  organization: process.env.OPENAI_ORGANIZATION_ID, // Add this if you have an org ID
-  project: process.env.OPENAI_PROJECT_ID, // Add project ID
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -16,9 +14,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Debug: Check API key configuration
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'OpenAI API key is not configured' });
+    return res.status(500).json({ error: 'Anthropic API key is not configured' });
   }
 
   try {
@@ -54,27 +52,17 @@ The JSON structure must be:
   }
 }`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "You are a JSON generator that outputs only valid, parseable JSON objects. Never include any additional text, formatting, or explanations. The output should be directly parseable by JSON.parse()."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000
+    const completion = await anthropic.messages.create({
+      model: "claude-3-sonnet-20240229",
+      max_tokens: 4096,
+      messages: [{ role: "user", content: prompt }],
+      system: "You are a JSON generator that outputs only valid, parseable JSON objects. Never include any additional text, formatting, or explanations. The output should be directly parseable by JSON.parse()."
     });
 
-    // Get the response content
-    const responseContent = completion.choices[0].message.content;
+    const responseContent = completion.content[0].text;
     
     // Debug log
-    console.log('OpenAI response:', responseContent);
+    console.log('Anthropic response:', responseContent);
 
     // Validate JSON before parsing
     try {
@@ -89,7 +77,7 @@ The JSON structure must be:
     } catch (parseError) {
       console.error('JSON parsing error:', parseError);
       return res.status(500).json({ 
-        error: 'Failed to parse OpenAI response',
+        error: 'Failed to parse Anthropic response',
         details: parseError.message,
         rawResponse: responseContent
       });

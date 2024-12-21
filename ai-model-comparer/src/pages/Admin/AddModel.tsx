@@ -32,19 +32,17 @@ export default function AddModel() {
     category: '',
     description: '',
     features: '',
-    advantages: '',
-    disadvantages: '',
+    pros: '',
+    cons: '',
     pricing: '',
     useCases: '',
   });
 
   const handleInputChange = (field: string, value: string) => {
-    console.log(`Updating ${field} with value:`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSelectChange = (field: string, value: string) => {
-    console.log(`Updating ${field} with selected value:`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -70,9 +68,9 @@ export default function AddModel() {
         category: 'יצירת תמונות', // Default category for Midjourney
         description: data.description || '',
         features: Array.isArray(data.features) ? data.features.join('\n') : '',
-        advantages: Array.isArray(data.pros) ? data.pros.join('\n') : '',
-        disadvantages: Array.isArray(data.cons) ? data.cons.join('\n') : '',
-        pricing: data.pricing?.freeTier ? 'freemium' : 'paid',
+        pros: Array.isArray(data.pros) ? data.pros.join('\n') : '',
+        cons: Array.isArray(data.cons) ? data.cons.join('\n') : '',
+        pricing: data.pricing?.free_tier ? 'freemium' : 'paid',
         useCases: Array.isArray(data.useCases) ? data.useCases.join('\n') : '',
       };
 
@@ -98,9 +96,13 @@ export default function AddModel() {
         category: formData.category,
         description: formData.description.trim(),
         features: formData.features.split('\n').filter(line => line.trim()),
-        pros: formData.advantages.split('\n').filter(line => line.trim()),
-        cons: formData.disadvantages.split('\n').filter(line => line.trim()),
-        pricing: formData.pricing,
+        pros: formData.pros.split('\n').filter(line => line.trim()),
+        cons: formData.cons.split('\n').filter(line => line.trim()),
+        pricing: {
+          free_tier: formData.pricing === 'free' ? 'Available' : undefined,
+          paid_tier: formData.pricing === 'paid' ? 'Available' : undefined,
+          enterprise: formData.pricing === 'enterprise' ? 'Available' : undefined,
+        },
         use_cases: formData.useCases.split('\n').filter(line => line.trim()),
         last_updated: new Date().toISOString().split('T')[0],
         created_at: new Date().toISOString(),
@@ -144,20 +146,25 @@ export default function AddModel() {
         return;
       }
 
-      const { error } = await supabase.from('ai_models').insert([{
+      const modelData: ModelData = {
         name: formData.name.trim(),
         category: formData.category,
         description: formData.description.trim(),
         features: formData.features.split('\n').filter(line => line.trim()),
-        advantages: formData.advantages.split('\n').filter(line => line.trim()),
-        disadvantages: formData.disadvantages.split('\n').filter(line => line.trim()),
-        pricing: formData.pricing.trim(),
-        use_cases: formData.useCases.split('\n').filter(line => line.trim()),
-        last_updated: new Date().toISOString().split('T')[0],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        pros: formData.pros.split('\n').filter(line => line.trim()),
+        cons: formData.cons.split('\n').filter(line => line.trim()),
+        pricing: {
+          free_tier: formData.pricing === 'free' ? 'Available' : undefined,
+          paid_tier: formData.pricing === 'paid' ? 'Available' : undefined,
+          enterprise: formData.pricing === 'enterprise' ? 'Available' : undefined,
+        },
+        useCases: formData.useCases.split('\n').filter(line => line.trim()),
+        alternatives: [],
+        sourceDate: new Date().toISOString(),
         api_available: true
-      }]);
+      };
+
+      const { error } = await supabase.from('ai_models').insert([modelData]);
 
       if (error) throw error;
 
@@ -172,8 +179,8 @@ export default function AddModel() {
         category: '',
         description: '',
         features: '',
-        advantages: '',
-        disadvantages: '',
+        pros: '',
+        cons: '',
         pricing: '',
         useCases: '',
       });
@@ -267,20 +274,20 @@ export default function AddModel() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{SECTION_HEADERS.advantages}</Label>
+                <Label>{SECTION_HEADERS.pros}</Label>
                 <Textarea
-                  value={formData.advantages}
-                  onChange={(e) => handleInputChange('advantages', e.target.value)}
+                  value={formData.pros}
+                  onChange={(e) => handleInputChange('pros', e.target.value)}
                   placeholder="הזן יתרונות, כל אחד בשורה חדשה"
                   rows={4}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>{SECTION_HEADERS.disadvantages}</Label>
+                <Label>{SECTION_HEADERS.cons}</Label>
                 <Textarea
-                  value={formData.disadvantages}
-                  onChange={(e) => handleInputChange('disadvantages', e.target.value)}
+                  value={formData.cons}
+                  onChange={(e) => handleInputChange('cons', e.target.value)}
                   placeholder="הזן חסרונות, כל אחד בשורה חדשה"
                   rows={4}
                 />
@@ -361,33 +368,20 @@ export default function AddModel() {
               <div>
                 <h3 className="font-medium">{SECTION_HEADERS.pricing}</h3>
                 <div className="space-y-2">
-                  {typeof generatedData.pricing === 'string' ? (
-                    <p>{generatedData.pricing}</p>
-                  ) : (
-                    <>
-                      {generatedData.pricing.free && (
-                        <p>{SECTION_HEADERS.freeTier}</p>
-                      )}
-                      {generatedData.pricing.plans?.map((plan, index) => (
-                        <div key={index} className="border p-3 rounded-md">
-                          <h4 className="font-medium">{plan.name}</h4>
-                          <p>{plan.price}</p>
-                          {plan.features?.length > 0 && (
-                            <ul className="list-disc pl-5 mt-2">
-                              {plan.features.map((feature, featureIndex) => (
-                                <li key={featureIndex}>{feature}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                    </>
+                  {generatedData.pricing.free_tier && (
+                    <p>{SECTION_HEADERS.free_tier}: {generatedData.pricing.free_tier}</p>
+                  )}
+                  {generatedData.pricing.paid_tier && (
+                    <p>{SECTION_HEADERS.paid_tier}: {generatedData.pricing.paid_tier}</p>
+                  )}
+                  {generatedData.pricing.enterprise && (
+                    <p>{SECTION_HEADERS.enterprise}: {generatedData.pricing.enterprise}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <h3 className="font-medium">{SECTION_HEADERS.advantages}</h3>
+                <h3 className="font-medium">{SECTION_HEADERS.pros}</h3>
                 <ul className="list-disc pl-5">
                   {generatedData.pros.map((pro, index) => (
                     <li key={index}>{pro}</li>
@@ -396,7 +390,7 @@ export default function AddModel() {
               </div>
 
               <div>
-                <h3 className="font-medium">{SECTION_HEADERS.disadvantages}</h3>
+                <h3 className="font-medium">{SECTION_HEADERS.cons}</h3>
                 <ul className="list-disc pl-5">
                   {generatedData.cons.map((con, index) => (
                     <li key={index}>{con}</li>

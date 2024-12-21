@@ -1,5 +1,23 @@
 import type { ModelData } from '../types/modelTypes';
 
+export interface ModelData {
+  name: string;
+  description: string;
+  features: string[];
+  pricing: {
+    free_tier?: string;
+    paid_tier?: string;
+    enterprise?: string;
+  };
+  pros: string[];
+  cons: string[];
+  useCases: string[];
+  alternatives: string[];
+  sourceDate: string;
+  category?: string;
+  api_available?: boolean;
+}
+
 export async function generateModelData(modelName: string): Promise<ModelData> {
   try {
     console.log('Sending request to backend API for:', modelName);
@@ -29,12 +47,19 @@ export async function generateModelData(modelName: string): Promise<ModelData> {
     const transformedData: ModelData = {
       name: data.name,
       description: data.description,
-      capabilities: data.capabilities || [],
-      limitations: data.limitations || [],
+      features: data.features || [],
+      pricing: {
+        free_tier: data.pricing.free_tier || '',
+        paid_tier: data.pricing.paid_tier || '',
+        enterprise: data.pricing.enterprise || '',
+      },
+      pros: data.pros || [],
+      cons: data.cons || [],
       useCases: data.useCases || [],
-      pricing: data.pricing || '',
-      apiDocumentation: data.apiDocumentation || '',
-      created_at: new Date().toISOString(),
+      alternatives: data.alternatives || [],
+      sourceDate: new Date().toISOString(),
+      category: data.category,
+      api_available: data.api_available,
     };
 
     return transformedData;
@@ -50,20 +75,34 @@ export function generateMarkdownContent(data: ModelData): string {
 ## Description
 ${data.description}
 
-## Capabilities
-${data.capabilities.map(cap => `- ${cap}`).join('\n')}
+## Features
+${data.features.map(feature => `- ${feature}`).join('\n')}
 
-## Limitations
-${data.limitations.map(lim => `- ${lim}`).join('\n')}
+## Pricing
+**Free Tier:** ${data.pricing.free_tier}
+**Paid Tier:** ${data.pricing.paid_tier}
+**Enterprise:** ${data.pricing.enterprise}
+
+## Pros
+${data.pros.map(pro => `- ${pro}`).join('\n')}
+
+## Cons
+${data.cons.map(con => `- ${con}`).join('\n')}
 
 ## Use Cases
 ${data.useCases.map(use => `- ${use}`).join('\n')}
 
-## Pricing
-${data.pricing}
+## Alternatives
+${data.alternatives.map(alternative => `- ${alternative}`).join('\n')}
 
-## API Documentation
-${data.apiDocumentation}
+## Source Date
+${data.sourceDate}
+
+## Category
+${data.category}
+
+## API Available
+${data.api_available}
 `;
 }
 
