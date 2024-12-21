@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* API Filter styles */
+.api-filter {
+  @apply flex items-center gap-2 bg-purple-500/20 rounded-lg px-2.5 py-1 text-xs;
+}
+
+.api-filter-text {
+  @apply text-gray-300 whitespace-nowrap;
+}
+
+.api-filter-indicator {
+  @apply w-2.5 h-2.5 rounded-sm bg-purple-500/30 border border-purple-500/50 flex-shrink-0;
+}
+
+/* Custom styles for cards */
+.model-card {
+  @apply relative overflow-hidden rounded-xl border border-gray-800 bg-gray-900/50 backdrop-blur-sm transition-all duration-300;
+}
+
+.model-card:hover {
+  @apply border-gray-700 shadow-lg transform scale-[1.02];
+}
+
+.model-card-header {
+  @apply flex items-center justify-between p-6 border-b border-gray-800;
+}
+
+.model-card-content {
+  @apply p-6 space-y-4;
+}
+
+.tag {
+  @apply px-2.5 py-1 text-xs font-medium rounded-full;
+}
+
+.tag-free {
+  @apply bg-green-500/10 text-green-400 border border-green-500/20;
+}
+
+.tag-premium {
+  @apply bg-blue-500/10 text-blue-400 border border-blue-500/20;
+}
+
+.tag-paid {
+  @apply bg-purple-500/10 text-purple-400 border border-purple-500/20;
+}
+
+.feature-tag {
+  @apply px-2.5 py-1 text-xs font-medium rounded-full bg-gray-800 text-gray-300;
+}
+
+.action-button {
+  @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200;
+}
+
+.action-button-primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+
+.action-button-secondary {
+  @apply bg-gray-800 text-gray-300 hover:bg-gray-700;
+}
