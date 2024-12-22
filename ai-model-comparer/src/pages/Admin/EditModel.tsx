@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { GradientHeading } from "@/components/ui/gradient-heading"
 import Header from '@/components/Header'
 import { Database } from '@/lib/database.types'
-import { generateModelContent, getFavicon } from '@/lib/anthropic'
+import { generateModelContent } from '@/lib/anthropic'
 import { useToast } from '@/components/ui/use-toast'
 
 type ModelFormData = {
@@ -120,15 +120,6 @@ export default function EditModel() {
         favicon: formData.favicon.trim() || null,
         show_in_home: formData.show_in_home,
         url: formData.url.trim() || null
-      }
-
-      if (!modelData.favicon) {
-        try {
-          const faviconUrl = await getFavicon(modelData.url)
-          modelData.favicon = faviconUrl
-        } catch (error) {
-          console.error('Error getting favicon:', error)
-        }
       }
 
       if (id) {

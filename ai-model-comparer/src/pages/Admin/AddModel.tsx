@@ -178,30 +178,16 @@ export default function AddModel() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      toast({
-        variant: "destructive",
-        title: "שגיאה",
-        description: "יש למלא את כל שדות החובה"
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
       const modelData = {
         name: formData.name,
         description: formData.description,
-        features: formData.features.split('\n').filter(Boolean),
+        category_id: formData.category,
         pros: formData.pros.split('\n').filter(Boolean),
         cons: formData.cons.split('\n').filter(Boolean),
-        category_id: formData.category,
-        pricing_model: formData.pricing_model,
-        pricing_type: formData.pricing_type,
-        api_available: formData.api_available,
-        featured: formData.featured,
+        show_in_home: formData.featured,
         url: formData.url
       };
 
@@ -213,7 +199,7 @@ export default function AddModel() {
 
       toast({
         title: "הצלחה",
-        description: "המודל נשמר בהצלחה"
+        description: "המודל נוצר בהצלחה"
       });
 
       navigate('/admin/models');
