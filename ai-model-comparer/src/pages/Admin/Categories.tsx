@@ -19,15 +19,19 @@ export default function Categories() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    console.log('Categories component mounted')
     fetchCategories()
   }, [])
 
   const fetchCategories = async () => {
+    console.log('Fetching categories...')
     try {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
         .order('name')
+
+      console.log('Categories response:', { data, error })
 
       if (error) throw error
       setCategories(data || [])
@@ -70,38 +74,43 @@ export default function Categories() {
           </Button>
         </div>
 
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {categories.map((category) => (
             <div
               key={category.id}
-              className="bg-card p-6 rounded-lg shadow-sm flex items-center justify-between"
+              className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px] border border-black/10 dark:border-border"
             >
-              <div className="flex items-center gap-4">
-                <div className="text-2xl">
-                  {category.icon} {/* נצטרך להחליף את זה באייקון אמיתי */}
+              <div className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-primary/0 via-secondary/0 to-primary/0 opacity-0 blur transition-all duration-500 group-hover:from-primary/20 group-hover:via-secondary/20 group-hover:to-primary/20 group-hover:opacity-100" />
+              <div className="relative">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 text-primary">
+                    <span className="text-2xl">{category.icon || '🔧'}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold">{category.name}</h3>
+                    {category.description && (
+                      <p className="text-muted-foreground text-sm mt-1">{category.description}</p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-semibold">{category.name}</h3>
-                  {category.description && (
-                    <p className="text-muted-foreground">{category.description}</p>
-                  )}
+                
+                <div className="border-t border-border pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={category.is_active}
+                        onCheckedChange={() => toggleCategoryStatus(category.id, category.is_active)}
+                      />
+                      <Label className="text-sm">{category.is_active ? 'פעיל' : 'לא פעיל'}</Label>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(`/admin/categories/${category.id}`)}
+                    >
+                      ערוך
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={category.is_active}
-                    onCheckedChange={() => toggleCategoryStatus(category.id, category.is_active)}
-                  />
-                  <Label>{category.is_active ? 'פעיל' : 'לא פעיל'}</Label>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate(`/admin/categories/${category.id}`)}
-                >
-                  ערוך
-                </Button>
               </div>
             </div>
           ))}
