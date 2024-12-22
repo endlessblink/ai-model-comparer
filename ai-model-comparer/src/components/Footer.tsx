@@ -1,23 +1,24 @@
-const Footer = () => {
+import Link from 'next/link';
+
+export function Footer() {
   return (
-    <footer className="border-t">
-      <div className="container flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0">
-        <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-          <p className="text-center text-sm leading-loose md:text-right">
-            נבנה עם ❤️ עבור קהילת ה-AI הישראלית
-          </p>
-        </div>
-        <nav className="flex items-center space-x-4 space-x-reverse">
-          <a href="/about" className="text-sm underline underline-offset-4">
+    <footer className="border-t mt-auto">
+      <div className="container mx-auto py-6 flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
+            דף הבית
+          </Link>
+          <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground">
             אודות
-          </a>
-          <a href="/contact" className="text-sm underline underline-offset-4">
+          </Link>
+          <Link href="/contact" className="text-sm text-muted-foreground hover:text-foreground">
             צור קשר
-          </a>
-        </nav>
+          </Link>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {new Date().getFullYear()} AI Model Comparer. כל הזכויות שמורות.
+        </div>
       </div>
     </footer>
   );
-};
-
-export default Footer;
+}
