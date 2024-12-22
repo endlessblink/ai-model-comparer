@@ -7,7 +7,7 @@ export default function Header() {
   const { session, signOut } = useAuth()
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="fixed top-0 z-50 w-full border-b bg-white dark:bg-background">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <Link to="/" className="text-lg font-bold text-foreground hover:text-foreground/90 transition-colors">

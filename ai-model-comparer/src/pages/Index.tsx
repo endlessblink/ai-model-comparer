@@ -15,7 +15,7 @@ export default function Home() {
         </div>
         
         <div className="relative">
-          <h1 className="text-6xl font-bold mb-8 bg-gradient-to-r from-primary via-secondary to-primary inline-block text-transparent bg-clip-text tracking-tight">
+          <h1 className="text-6xl font-bold text-black dark:bg-gradient-to-r dark:from-primary dark:via-secondary dark:to-primary dark:text-transparent dark:bg-clip-text tracking-tight mb-8">
             גלה את עולם הבינה המלאכותית
           </h1>
           <p className="text-muted-foreground text-xl mb-12 max-w-2xl mx-auto leading-relaxed">
@@ -38,18 +38,20 @@ export default function Home() {
 
       {/* Model Types Section */}
       <div className="container mx-auto px-4 py-32">
-        <h2 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-primary to-secondary inline-block text-transparent bg-clip-text">סוגי מודלים</h2>
+        <h2 className="text-4xl font-bold text-center text-black dark:bg-gradient-to-r dark:from-primary dark:to-secondary dark:text-transparent dark:bg-clip-text mb-4">סוגי מודלים</h2>
         <p className="text-muted-foreground text-center mb-16 text-lg">גלה את המגוון הרחב של מודלי AI המתקדמים ביותר</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Code Models */}
-          <div className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px]">
+          <div className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px] border border-black/10 dark:border-border">
             <div className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-primary/0 via-secondary/0 to-primary/0 opacity-0 blur transition-all duration-500 group-hover:from-primary/20 group-hover:via-secondary/20 group-hover:to-primary/20 group-hover:opacity-100" />
             <div className="relative">
               <div className="flex items-center gap-4 mb-8">
                 <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 text-primary">
                   <Code2 className="w-8 h-8" />
                 </div>
-                <h3 className="text-2xl font-semibold bg-gradient-to-r from-foreground to-foreground/80 text-transparent bg-clip-text">מודלים ליצירת קוד</h3>
+                <h3 className="text-2xl font-semibold text-black dark:bg-gradient-to-r dark:from-foreground dark:to-foreground/80 dark:text-transparent dark:bg-clip-text">
+                  מודלים ליצירת קוד
+                </h3>
               </div>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 מודלים המתמחים בכתיבת קוד, דיבוג ואופטימיזציה של הליכי פיתוח
@@ -99,14 +101,16 @@ export default function Home() {
           </div>
 
           {/* Image Models */}
-          <div className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px]">
+          <div className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px] border border-black/10 dark:border-border">
             <div className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-primary/0 via-secondary/0 to-primary/0 opacity-0 blur transition-all duration-500 group-hover:from-primary/20 group-hover:via-secondary/20 group-hover:to-primary/20 group-hover:opacity-100" />
             <div className="relative">
               <div className="flex items-center gap-4 mb-8">
                 <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 text-primary">
                   <Image className="w-8 h-8" />
                 </div>
-                <h3 className="text-2xl font-semibold bg-gradient-to-r from-foreground to-foreground/80 text-transparent bg-clip-text">מודלים ליצירת תמונות</h3>
+                <h3 className="text-2xl font-semibold text-black dark:bg-gradient-to-r dark:from-foreground dark:to-foreground/80 dark:text-transparent dark:bg-clip-text">
+                  מודלים ליצירת תמונות
+                </h3>
               </div>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 מודלים המתמחים ביצירה ועריכה של תמונות מתיאור טקסטואלי
@@ -156,14 +160,16 @@ export default function Home() {
           </div>
 
           {/* Text Models */}
-          <div className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px]">
+          <div className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px] border border-black/10 dark:border-border">
             <div className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-primary/0 via-secondary/0 to-primary/0 opacity-0 blur transition-all duration-500 group-hover:from-primary/20 group-hover:via-secondary/20 group-hover:to-primary/20 group-hover:opacity-100" />
             <div className="relative">
               <div className="flex items-center gap-4 mb-8">
                 <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 text-primary">
                   <FileText className="w-8 h-8" />
                 </div>
-                <h3 className="text-2xl font-semibold bg-gradient-to-r from-foreground to-foreground/80 text-transparent bg-clip-text">מודלים ליצירת טקסט</h3>
+                <h3 className="text-2xl font-semibold text-black dark:bg-gradient-to-r dark:from-foreground dark:to-foreground/80 dark:text-transparent dark:bg-clip-text">
+                  מודלים ליצירת טקסט
+                </h3>
               </div>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 מודלים המתמחים בתרגום, תיקון וניתוח שפה טבעית
@@ -213,7 +219,7 @@ export default function Home() {
           </div>
 
           {/* Audio Models */}
-          <div className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px]">
+          <div className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px] border border-black/10 dark:border-border">
             <div className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-primary/0 via-secondary/0 to-primary/0 opacity-0 blur transition-all duration-500 group-hover:from-primary/20 group-hover:via-secondary/20 group-hover:to-primary/20 group-hover:opacity-100" />
             <div className="relative">
               <div className="flex items-center gap-4 mb-8">
@@ -222,7 +228,9 @@ export default function Home() {
                     <path d="M12 3v18M8 7v10M16 7v10M4 11v2M20 11v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <h3 className="text-2xl font-semibold bg-gradient-to-r from-foreground to-foreground/80 text-transparent bg-clip-text">מודלים ליצירת אודיו</h3>
+                <h3 className="text-2xl font-semibold text-black dark:bg-gradient-to-r dark:from-foreground dark:to-foreground/80 dark:text-transparent dark:bg-clip-text">
+                  מודלים ליצירת אודיו
+                </h3>
               </div>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 מודלים המתמחים ביצירת מוזיקה, הקלטות קול וסינתזה של דיבור
@@ -272,7 +280,7 @@ export default function Home() {
           </div>
 
           {/* Video Models */}
-          <div className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px]">
+          <div className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px] border border-black/10 dark:border-border">
             <div className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-primary/0 via-secondary/0 to-primary/0 opacity-0 blur transition-all duration-500 group-hover:from-primary/20 group-hover:via-secondary/20 group-hover:to-primary/20 group-hover:opacity-100" />
             <div className="relative">
               <div className="flex items-center gap-4 mb-8">
@@ -281,7 +289,9 @@ export default function Home() {
                     <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <h3 className="text-2xl font-semibold bg-gradient-to-r from-foreground to-foreground/80 text-transparent bg-clip-text">מודלים ליצירת וידאו</h3>
+                <h3 className="text-2xl font-semibold text-black dark:bg-gradient-to-r dark:from-foreground dark:to-foreground/80 dark:text-transparent dark:bg-clip-text">
+                  מודלים ליצירת וידאו
+                </h3>
               </div>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 מודלים המתמחים ביצירת וידאו, אנימציה ואפקטים מיוחדים
@@ -331,7 +341,7 @@ export default function Home() {
           </div>
 
           {/* 3D Models */}
-          <div className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px]">
+          <div className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px] border border-black/10 dark:border-border">
             <div className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-primary/0 via-secondary/0 to-primary/0 opacity-0 blur transition-all duration-500 group-hover:from-primary/20 group-hover:via-secondary/20 group-hover:to-primary/20 group-hover:opacity-100" />
             <div className="relative">
               <div className="flex items-center gap-4 mb-8">
@@ -341,7 +351,9 @@ export default function Home() {
                     <path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <h3 className="text-2xl font-semibold bg-gradient-to-r from-foreground to-foreground/80 text-transparent bg-clip-text">מודלים ליצירת תלת מימד</h3>
+                <h3 className="text-2xl font-semibold text-black dark:bg-gradient-to-r dark:from-foreground dark:to-foreground/80 dark:text-transparent dark:bg-clip-text">
+                  מודלים ליצירת תלת מימד
+                </h3>
               </div>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 מודלים המתמחים ביצירת מודלים תלת מימדיים, טקסטורות וסביבות וירטואליות
@@ -394,22 +406,28 @@ export default function Home() {
 
       {/* Interactive Demos Section */}
       <div className="container mx-auto px-4 py-32">
-        <h2 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-primary to-secondary inline-block text-transparent bg-clip-text">הדגמות אינטראקטיביות</h2>
-        <p className="text-muted-foreground text-center mb-16 text-lg">נסה בעצמך את היכולות של מודלים שונים</p>
+        <h2 className="text-4xl font-bold text-center text-black dark:bg-gradient-to-r dark:from-primary dark:to-secondary dark:text-transparent dark:bg-clip-text mb-4">הדגמות אינטראקטיביות</h2>
+        <p className="text-muted-foreground text-center mb-16 text-lg">
+          נסה בעצמך את היכולות של מודלים שונים
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Image Generation Demo */}
-          <div className="group rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px]">
-            <h3 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-foreground to-foreground/80 text-transparent bg-clip-text">הדגמת יצירת תמונות</h3>
-            <p className="text-muted-foreground text-lg mb-8">נסה ליצור תמונות בעזרת תיאור טקסטואלי</p>
+          <div className="group rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px] border border-black/10 dark:border-border">
+            <h3 className="text-2xl font-semibold text-black dark:bg-gradient-to-r dark:from-foreground dark:to-foreground/80 dark:text-transparent dark:bg-clip-text mb-4">הדגמת יצירת תמונות</h3>
+            <p className="text-muted-foreground text-lg mb-8">
+              נסה ליצור תמונות בעזרת תיאור טקסטואלי
+            </p>
             <div className="aspect-video rounded-2xl bg-card flex items-center justify-center group-hover:bg-card/90 transition-all duration-500">
               <p className="text-muted-foreground text-lg">בקרוב...</p>
             </div>
           </div>
 
           {/* Text Generation Demo */}
-          <div className="group rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px]">
-            <h3 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-foreground to-foreground/80 text-transparent bg-clip-text">הדגמת יצירת טקסט</h3>
-            <p className="text-muted-foreground text-lg mb-8">נסה ליצור טקסט בעזרת הנחיות פשוטות</p>
+          <div className="group rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px] border border-black/10 dark:border-border">
+            <h3 className="text-2xl font-semibold text-black dark:bg-gradient-to-r dark:from-foreground dark:to-foreground/80 dark:text-transparent dark:bg-clip-text mb-4">הדגמת יצירת טקסט</h3>
+            <p className="text-muted-foreground text-lg mb-8">
+              נסה ליצור טקסט בעזרת הנחיות פשוטות
+            </p>
             <div className="aspect-video rounded-2xl bg-card flex items-center justify-center group-hover:bg-card/90 transition-all duration-500">
               <p className="text-muted-foreground text-lg">בקרוב...</p>
             </div>
@@ -419,8 +437,10 @@ export default function Home() {
 
       {/* Model Comparison Section */}
       <div className="container mx-auto px-4 py-32">
-        <h2 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-primary to-secondary inline-block text-transparent bg-clip-text">השוואת מודלים</h2>
-        <p className="text-muted-foreground text-center mb-16 text-lg">השווה בין המודלים המובילים בתחום הבינה המלאכותית</p>
+        <h2 className="text-4xl font-bold text-center text-black dark:bg-gradient-to-r dark:from-primary dark:to-secondary dark:text-transparent dark:bg-clip-text mb-4">השוואת מודלים</h2>
+        <p className="text-muted-foreground text-center mb-16 text-lg">
+          השווה בין המודלים המובילים בתחום הבינה המלאכותית
+        </p>
         <div className="flex justify-center">
           <div className="relative w-full max-w-md">
             <input 

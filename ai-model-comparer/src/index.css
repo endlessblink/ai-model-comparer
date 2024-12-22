@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: #ffffff;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -73,7 +73,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#0a0118] text-foreground;
+    @apply bg-[#ffffff] text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
