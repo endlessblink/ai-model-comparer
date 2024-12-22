@@ -190,23 +190,30 @@ app.post('/api/generate-content', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const prompt = `You are a helpful AI assistant helping to create content for an AI tools comparison website.
-I will give you information about an AI tool/model, and you need to generate a comprehensive description, list of pros and cons.
-Please respond in JSON format with the following structure:
+    const prompt = `אתה עוזר לי ליצור תוכן לאתר השוואת כלי AI. אני אתן לך מידע על כלי/מודל AI, ואתה תייצר תיאור מקיף.
+אנא ענה אך ורק בפורמט JSON עם המבנה הבא:
+
 {
-  "description": "A detailed description of the model and its capabilities",
-  "pros": ["pro1", "pro2", "pro3"],
-  "cons": ["con1", "con2", "con3"]
+  "description": "תיאור קצר וממצה של הכלי בעברית. התייחס ליכולות העיקריות, למה הוא משמש, ומה מייחד אותו",
+  "pros": ["יתרון 1", "יתרון 2", ...], // רק יתרונות מובהקים ומוכחים, במשפטים קצרים
+  "cons": ["חיסרון 1", "חיסרון 2", ...] // רק חסרונות מובהקים ומוכחים, במשפטים קצרים
 }
 
-The model details:
-Name: ${modelName}
-URL: ${modelUrl}
-Category: ${category}
+הנחיות חשובות:
+1. כל התוכן חייב להיות בעברית (למעט שמות טכניים)
+2. אם אין לך מידע מהימן או עדכני - השאר את השדה ריק
+3. התמקד רק במידע עדכני ומאומת
+4. היתרונות והחסרונות צריכים להיות תמציתיים וברורים
+5. אל תמציא מידע או תנחש
 
-Please make sure the description is informative and accurate, and the pros and cons are balanced and realistic.
-Response should be in JSON format only, no additional text.`;
+פרטי המודל:
+שם: ${modelName}
+כתובת: ${modelUrl}
+קטגוריה: ${category}
 
+החזר אך ורק את אובייקט ה-JSON, ללא טקסט נוסף.`;
+
+    console.log('Sending request to Anthropic for model:', modelName);
     const completion = await anthropic.messages.create({
       model: "claude-3-opus-20240229",
       max_tokens: 1000,
@@ -214,7 +221,7 @@ Response should be in JSON format only, no additional text.`;
         role: "user", 
         content: prompt
       }],
-      system: "You are a helpful AI assistant that always returns valid JSON responses. Never include any text before or after the JSON object."
+      system: "אתה עוזר מקצועי שתמיד מחזיר תשובות JSON תקינות. לעולם אל תכלול טקסט לפני או אחרי אובייקט ה-JSON. אם אין לך מידע מהימן, החזר שדה ריק."
     });
 
     const content = completion.content[0].text.trim();
