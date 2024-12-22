@@ -32,20 +32,26 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = window.document.documentElement
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
 
-    root.classList.remove("light", "dark")
+    const updateTheme = () => {
+      root.classList.remove("light", "dark")
+      
+      if (theme === "system") {
+        const isDark = systemTheme.matches
+        root.classList.add(isDark ? "dark" : "light")
+        return
+      }
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-
-      root.classList.add(systemTheme)
-      return
+      root.classList.add(theme)
     }
 
-    root.classList.add(theme)
+    updateTheme()
+    systemTheme.addEventListener("change", updateTheme)
+
+    return () => {
+      systemTheme.removeEventListener("change", updateTheme)
+    }
   }, [theme])
 
   const value = {
