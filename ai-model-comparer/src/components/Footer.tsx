@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-export function Footer() {
+const Footer = () => {
   return (
     <footer className="border-t mt-auto">
       <div className="container mx-auto py-6 flex justify-between items-center">
@@ -22,3 +22,5 @@ export function Footer() {
     </footer>
   );
 }
+
+export default Footer;
