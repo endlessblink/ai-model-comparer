@@ -73,62 +73,42 @@ export default function Models() {
 
         <div className="grid gap-6">
           {models.map((model) => (
-            <div
-              key={model.id}
-              className="bg-card p-6 rounded-lg shadow-sm"
+            <div 
+              key={model.id} 
+              className="flex items-center gap-3 p-4 bg-card rounded-lg cursor-pointer hover:bg-accent/50 transition-colors"
+              onClick={() => navigate(`/model/${model.id}`)}
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  {model.favicon && (
-                    <img 
-                      src={model.favicon} 
-                      alt={model.name}
-                      className="w-8 h-8 object-contain"
-                    />
-                  )}
-                  <div>
-                    <h3 className="text-xl font-semibold">{model.name}</h3>
-                    <p className="text-muted-foreground">
-                      קטגוריה: {model.category?.name || 'לא מוגדר'}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={model.show_in_home}
-                      onCheckedChange={() => toggleModelVisibility(model.id, model.show_in_home)}
-                    />
-                    <span>{model.show_in_home ? 'מוצג בדף הבית' : 'מוסתר'}</span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate(`/admin/models/${model.id}`)}
-                  >
-                    ערוך
-                  </Button>
+              <div className="flex items-center gap-4">
+                {model.favicon && (
+                  <img 
+                    src={model.favicon} 
+                    alt={model.name}
+                    className="w-8 h-8 object-contain"
+                  />
+                )}
+                <div>
+                  <h3 className="text-xl font-semibold">{model.name}</h3>
+                  <p className="text-muted-foreground">
+                    קטגוריה: {model.category?.name || 'לא מוגדר'}
+                  </p>
                 </div>
               </div>
-
-              <p className="text-sm mb-4">{model.description}</p>
-
-              {(model.pros || model.cons) && (
-                <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
-                  {model.pros && (
-                    <div>
-                      <h4 className="font-semibold text-green-600 mb-2">יתרונות:</h4>
-                      <p>{model.pros}</p>
-                    </div>
-                  )}
-                  {model.cons && (
-                    <div>
-                      <h4 className="font-semibold text-red-600 mb-2">חסרונות:</h4>
-                      <p>{model.cons}</p>
-                    </div>
-                  )}
+              
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={model.show_in_home}
+                    onCheckedChange={() => toggleModelVisibility(model.id, model.show_in_home)}
+                  />
+                  <span>{model.show_in_home ? 'מוצג בדף הבית' : 'מוסתר'}</span>
                 </div>
-              )}
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(`/admin/models/${model.id}`)}
+                >
+                  ערוך
+                </Button>
+              </div>
             </div>
           ))}
         </div>

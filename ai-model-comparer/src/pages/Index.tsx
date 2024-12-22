@@ -5,6 +5,7 @@ import { ModelFavicon } from "@/components/ModelFavicon";
 import { GradientHeading } from "@/components/ui/gradient-heading";
 import { supabase } from "@/lib/supabase";
 import { Database } from '@/lib/database.types';
+import { useNavigate } from 'react-router-dom';
 
 type Category = Database['public']['Tables']['categories']['Row']
 type AIModel = Database['public']['Tables']['ai_models']['Row']
@@ -16,6 +17,7 @@ interface CategoryWithModels extends Category {
 export default function Home() {
   const [categories, setCategories] = useState<CategoryWithModels[]>([])
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCategoriesAndModels()
@@ -117,7 +119,11 @@ export default function Home() {
                     <h4 className="text-sm font-medium text-muted-foreground mb-4">מודלים מובילים</h4>
                     <div className="flex flex-wrap gap-4">
                       {category.models.slice(0, 2).map((model) => (
-                        <div key={model.id} className="flex items-center gap-3 bg-card rounded-2xl p-3 flex-1">
+                        <div 
+                          key={model.id} 
+                          className="flex items-center gap-3 bg-card rounded-2xl p-3 flex-1 cursor-pointer hover:bg-accent/50 transition-colors"
+                          onClick={() => navigate(`/model/${model.id}`)}
+                        >
                           {model.favicon ? (
                             <img 
                               src={model.favicon}

@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { MODEL_CATEGORIES } from '@/lib/constants'
+import { useNavigate } from 'react-router-dom'
 
 interface AIModel {
   id: string
@@ -32,6 +33,7 @@ interface AIModel {
 }
 
 export default function ModelComparison() {
+  const navigate = useNavigate()
   const [selectedCategory, setSelectedCategory] = useState<string>('מודל שפה')
   const [selectedPricing, setSelectedPricing] = useState<string>('all')
   const [onlyWithAPI, setOnlyWithAPI] = useState(false)
@@ -172,7 +174,11 @@ export default function ModelComparison() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredModels.map((model) => (
-            <div key={model.id} className="border rounded-lg p-6 bg-card">
+            <div 
+              key={model.id} 
+              className="border rounded-lg p-6 bg-card cursor-pointer hover:bg-accent/50 transition-colors"
+              onClick={() => navigate(`/model/${model.id}`)}
+            >
               <GradientHeading as="h3" className="text-xl mb-2">
                 {model.name}
               </GradientHeading>

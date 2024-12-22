@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase'
 import Admin from '@/pages/Admin'
 import Categories from '@/pages/Admin/Categories'
 import EditCategory from '@/pages/Admin/EditCategory'
+import ModelPage from '@/pages/Model'
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(false)
@@ -70,6 +71,7 @@ function App() {
           <Route path="/compare" element={<ComparisonPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/about" element={<About />} />
+          <Route path="/model/:id" element={<ModelPage />} />
           
           {/* Protected Admin Routes */}
           <Route
