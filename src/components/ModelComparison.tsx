@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { type ModelCategory, type AIModel } from '@/types/models'
 import { categoryNames, pricingModels, commonModelTags } from '@/data/models'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -7,36 +7,76 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Search, X } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { useDebounce } from '@/hooks/useDebounce'
+
+// Types for filter state
+type FilterState = {
+  category: ModelCategory
+  pricing: string
+  onlyWithAPI: boolean
+  searchQuery: string
+  tags: string[]
+}
 
 export default function ModelComparison() {
-  const [selectedCategory, setSelectedCategory] = useState<ModelCategory>('llm')
-  const [selectedPricing, setSelectedPricing] = useState<string>('all')
-  const [onlyWithAPI, setOnlyWithAPI] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  // Combine filter states into a single object
+  const [filters, setFilters] = useState<FilterState>({
+    category: 'llm',
+    pricing: 'all',
+    onlyWithAPI: false,
+    searchQuery: '',
+    tags: []
+  })
+  
   const [models, setModels] = useState<AIModel[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const availableTags = commonModelTags[selectedCategory] || []
+  // Debounce search query to prevent excessive filtering
+  const debouncedSearchQuery = useDebounce(filters.searchQuery, 300)
 
-  useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      setError('Supabase is not configured. Please check your environment variables.')
-      setIsLoading(false)
-      return
-    }
-    fetchModels()
-  }, [selectedCategory])
+  const availableTags = useMemo(() => 
+    commonModelTags[filters.category] || [], 
+    [filters.category]
+  )
 
-  async function fetchModels() {
+  // Memoize filtered models to prevent unnecessary recalculations
+  const filteredModels = useMemo(() => {
+    return models.filter(model => {
+      // Pricing filter
+      if (filters.pricing !== 'all' && model.pricing_model !== filters.pricing) return false
+      
+      // API availability filter
+      if (filters.onlyWithAPI && !model.api_available) return false
+      
+      // Search query filter
+      if (debouncedSearchQuery) {
+        const query = debouncedSearchQuery.toLowerCase()
+        const matchesSearch = 
+          model.name.toLowerCase().includes(query) ||
+          model.description.toLowerCase().includes(query) ||
+          model.tags.some(tag => tag.toLowerCase().includes(query))
+        if (!matchesSearch) return false
+      }
+      
+      // Tags filter
+      if (filters.tags.length > 0) {
+        if (!filters.tags.every(tag => model.tags.includes(tag))) return false
+      }
+      
+      return true
+    })
+  }, [models, filters.pricing, filters.onlyWithAPI, debouncedSearchQuery, filters.tags])
+
+  // Memoize fetch function to prevent unnecessary recreations
+  const fetchModels = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
       const { data, error } = await supabase
-        .from('models')
-        .select('*')
-        .eq('category', selectedCategory)
+        .from('ai_models')
+        .select('id, name, description, category, pricing_model, api_available, provider, tags')
+        .eq('category', filters.category)
         .order('name')
       
       if (error) throw error
@@ -47,32 +87,24 @@ export default function ModelComparison() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [filters.category])
 
-  const filteredModels = models.filter(model => {
-    // Pricing filter
-    if (selectedPricing !== 'all' && model.pricing_model !== selectedPricing) return false
-    
-    // API availability filter
-    if (onlyWithAPI && !model.api_available) return false
-    
-    // Search query filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      const matchesSearch = 
-        model.name.toLowerCase().includes(query) ||
-        model.description.toLowerCase().includes(query) ||
-        model.tags.some(tag => tag.toLowerCase().includes(query))
-      if (!matchesSearch) return false
+  useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setError('Supabase is not configured. Please check your environment variables.')
+      setIsLoading(false)
+      return
     }
-    
-    // Tags filter
-    if (selectedTags.length > 0) {
-      if (!selectedTags.every(tag => model.tags.includes(tag))) return false
-    }
-    
-    return true
-  })
+    fetchModels()
+  }, [fetchModels])
+
+  // Update filter handlers
+  const updateFilter = useCallback(<K extends keyof FilterState>(
+    key: K,
+    value: FilterState[K]
+  ) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+  }, [])
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -92,8 +124,8 @@ export default function ModelComparison() {
               <div className="flex items-center gap-3 bg-purple-500/20 rounded-lg px-4 py-1.5">
                 <input
                   type="checkbox"
-                  checked={onlyWithAPI}
-                  onChange={(e) => setOnlyWithAPI(e.target.checked)}
+                  checked={filters.onlyWithAPI}
+                  onChange={(e) => updateFilter('onlyWithAPI', e.target.checked)}
                   id="api-filter"
                   className="rounded border-gray-700 bg-transparent"
                 />
@@ -109,13 +141,13 @@ export default function ModelComparison() {
                 <Input
                   type="search"
                   placeholder="חיפוש מודלים..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  value={filters.searchQuery}
+                  onChange={(e) => updateFilter('searchQuery', e.target.value)}
                   className="pr-10 text-right bg-[#0d0e1a] border-gray-800 focus:border-purple-500 focus:ring-purple-500/20"
                 />
               </div>
-　　 　 　 　
-              <Select value={selectedPricing} onValueChange={setSelectedPricing}>
+              
+              <Select value={filters.pricing} onValueChange={(value) => updateFilter('pricing', value)}>
                 <SelectTrigger className="w-[180px] bg-[#0d0e1a] border-gray-800">
                   <SelectValue placeholder="סינון לפי תמחור" />
                 </SelectTrigger>
@@ -138,8 +170,8 @@ export default function ModelComparison() {
                     key={key}
                     value={key}
                     onClick={() => {
-                      setSelectedCategory(key as ModelCategory)
-                      setSelectedTags([])
+                      updateFilter('category', key as ModelCategory)
+                      updateFilter('tags', [])
                     }}
                     className="px-4 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-purple-400 data-[state=active]:border-b-2 data-[state=active]:border-purple-400"
                   >
@@ -157,27 +189,26 @@ export default function ModelComparison() {
               {availableTags.map(tag => (
                 <Badge
                   key={tag}
-                  variant={selectedTags.includes(tag) ? "default" : "outline"}
+                  variant={filters.tags.includes(tag) ? "default" : "outline"}
                   className={`cursor-pointer ${
-                    selectedTags.includes(tag)
+                    filters.tags.includes(tag)
                       ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
                       : 'border-gray-800 hover:border-purple-500/50'
                   }`}
                   onClick={() => {
-                    setSelectedTags(prev =>
-                      prev.includes(tag)
-                        ? prev.filter(t => t !== tag)
-                        : [...prev, tag]
+                    updateFilter('tags', filters.tags.includes(tag)
+                      ? filters.tags.filter(t => t !== tag)
+                      : [...filters.tags, tag]
                     )
                   }}
                 >
                   {tag}
-                  {selectedTags.includes(tag) && (
+                  {filters.tags.includes(tag) && (
                     <X 
                       className="h-3 w-3 mr-1 hover:text-purple-300" 
                       onClick={(e) => {
                         e.stopPropagation()
-                        setSelectedTags(prev => prev.filter(t => t !== tag))
+                        updateFilter('tags', filters.tags.filter(t => t !== tag))
                       }} 
                     />
                   )}
@@ -228,4 +259,4 @@ export default function ModelComparison() {
       )}
     </div>
   )
-} 
+}

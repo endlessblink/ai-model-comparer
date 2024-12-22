@@ -1,0 +1,12 @@
+{
+  "buildCommand": "vite build",
+  "devCommand": "vite",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "functions": {
+    "api/generate.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
+}

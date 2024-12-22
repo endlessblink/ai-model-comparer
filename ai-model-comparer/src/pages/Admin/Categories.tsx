@@ -10,6 +10,9 @@ import { GradientHeading } from "@/components/ui/gradient-heading"
 import Header from '@/components/Header'
 import { Database } from '@/lib/database.types'
 import { Code2, Image, Video, Music, Mic, ScanFace, FileText } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { toast } from '@/components/ui/toaster'
+import AddCategoryElement from '@/components/admin/categories/AddCategoryElement'
 
 type Category = Database['public']['Tables']['categories']['Row']
 
@@ -39,6 +42,7 @@ export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showAddDialog, setShowAddDialog] = useState(false)
 
   useEffect(() => {
     console.log('Categories component mounted')
@@ -91,7 +95,7 @@ export default function Categories() {
           <GradientHeading as="h1" className="text-4xl">
             ניהול קטגוריות
           </GradientHeading>
-          <Button onClick={() => navigate('/admin/categories/new')}>
+          <Button onClick={() => setShowAddDialog(true)}>
             קטגוריה חדשה
           </Button>
         </div>
@@ -157,6 +161,47 @@ export default function Categories() {
           ))}
         </div>
       </div>
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="bg-[#0F0B1F] border-[#1E1B4B] text-white sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold bg-gradient-to-br from-[rgba(138,116,249,0.9)] via-[rgba(147,151,255,0.8)] to-[rgba(138,116,249,0.7)] bg-clip-text text-transparent text-center">
+              קטגוריה חדשה
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-center text-muted-foreground text-sm mb-4">
+            הוסף קטגוריה חדשה למערכת
+          </div>
+          <AddCategoryElement onSubmit={async (name, description, icon) => {
+            try {
+              const { error } = await supabase
+                .from('categories')
+                .insert({
+                  name,
+                  description,
+                  icon,
+                  created_at: new Date().toISOString()
+                });
+
+              if (error) throw error;
+
+              toast({
+                title: "הצלחה",
+                description: "הקטגוריה נוספה בהצלחה",
+              });
+
+              setShowAddDialog(false);
+              fetchCategories();
+            } catch (err) {
+              console.error('Error adding category:', err);
+              toast({
+                variant: "destructive",
+                title: "שגיאה",
+                description: "אירעה שגיאה בהוספת הקטגוריה",
+              });
+            }
+          }} />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

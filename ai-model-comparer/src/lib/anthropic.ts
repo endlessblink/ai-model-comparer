@@ -1,35 +1,19 @@
 interface GenerateModelContentProps {
-  modelName: string;
-  modelUrl: string;
-  category: string;
+  prompt: string;
 }
 
-export async function generateModelContent({ 
-  modelName, 
-  modelUrl, 
-  category 
-}: GenerateModelContentProps) {
+import { supabase } from './supabase';
+
+export async function generateModelContent(prompt: string): Promise<string> {
   try {
-    const response = await fetch('http://localhost:3001/api/generate-content', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        modelName,
-        modelUrl,
-        category
-      }),
+    const { data, error } = await supabase.functions.invoke('generate-content', {
+      body: { prompt }
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(error || 'Failed to generate content');
-    }
-
-    return await response.json();
+    if (error) throw error;
+    return data.text;
   } catch (error) {
-    console.error('Error generating model content:', error);
+    console.error('Error generating content:', error);
     throw error;
   }
 }

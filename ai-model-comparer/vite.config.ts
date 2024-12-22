@@ -49,6 +49,17 @@ export default defineConfig({
     fs: {
       strict: false,
       allow: ['..']
+    },
+    proxy: {
+      '/api/anthropic': {
+        target: 'https://api.anthropic.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/anthropic/, ''),
+        headers: {
+          'x-api-key': process.env.REACT_APP_ANTHROPIC_API_KEY || '',
+          'anthropic-version': '2023-06-01'
+        }
+      }
     }
   },
   build: {
