@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MODEL_CATEGORIES } from '@/lib/constants';
 
 export default function AddModel() {
   const { toast } = useToast();
@@ -25,7 +26,7 @@ export default function AddModel() {
   const [showPreview, setShowPreview] = useState(false);
   const [formData, setFormData] = useState<ModelData>({
     name: '',
-    category: 'llm',
+    category: '',
     description: '',
     features: '',
     pros: '',
@@ -65,7 +66,7 @@ export default function AddModel() {
     });
 
     // Category validation
-    if (!['llm', 'image', 'video', 'music', 'narration', 'lipsync'].includes(formData.category)) {
+    if (!MODEL_CATEGORIES.includes(formData.category)) {
       newErrors.category = 'קטגוריה לא תקינה';
     }
 
@@ -168,12 +169,21 @@ export default function AddModel() {
 
               <div>
                 <Label htmlFor="category">{SECTION_HEADERS.category}</Label>
-                <Input
-                  id="category"
+                <Select
                   value={formData.category}
-                  onChange={(e) => handleInputChange('category', e.target.value)}
-                  className={errors.category ? 'border-red-500' : ''}
-                />
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODEL_CATEGORIES.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
               </div>
 
