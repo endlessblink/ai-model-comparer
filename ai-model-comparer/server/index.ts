@@ -62,7 +62,8 @@ app.get('/', (req, res) => {
     message: 'AI Model Comparer API Server',
     endpoints: {
       health: '/api/health',
-      generateModelData: '/api/generate-model-data'
+      generateModelData: '/api/generate-model-data',
+      generateContent: '/api/generate-content'
     }
   });
 });
@@ -177,6 +178,55 @@ Important: Return ONLY the JSON object, without any additional text or explanati
     res.status(500).json({ 
       error: 'Internal server error',
       details: error.message
+    });
+  }
+});
+
+app.post('/api/generate-content', async (req, res) => {
+  try {
+    const { modelName, modelUrl, category } = req.body;
+
+    if (!modelName || !modelUrl || !category) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const prompt = `You are a helpful AI assistant helping to create content for an AI tools comparison website.
+I will give you information about an AI tool/model, and you need to generate a comprehensive description, list of pros and cons.
+Please respond in JSON format with the following structure:
+{
+  "description": "A detailed description of the model and its capabilities",
+  "pros": ["pro1", "pro2", "pro3"],
+  "cons": ["con1", "con2", "con3"]
+}
+
+The model details:
+Name: ${modelName}
+URL: ${modelUrl}
+Category: ${category}
+
+Please make sure the description is informative and accurate, and the pros and cons are balanced and realistic.
+Response should be in JSON format only, no additional text.`;
+
+    const completion = await anthropic.messages.create({
+      model: "claude-3-opus-20240229",
+      max_tokens: 1000,
+      messages: [{ 
+        role: "user", 
+        content: prompt
+      }],
+      system: "You are a helpful AI assistant that always returns valid JSON responses. Never include any text before or after the JSON object."
+    });
+
+    const content = completion.content[0].text.trim();
+    const jsonContent = content.replace(/^```json\n?|\n?```$/g, '').trim();
+    const modelData = JSON.parse(jsonContent);
+
+    res.json(modelData);
+  } catch (error) {
+    console.error('Error generating content:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate content',
+      details: error.message 
     });
   }
 });

@@ -6,6 +6,13 @@ import { GradientHeading } from "@/components/ui/gradient-heading";
 import { supabase } from "@/lib/supabase";
 import { Database } from '@/lib/database.types';
 import { useNavigate } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/components/ui/use-toast';
+import { generateModelContent } from '@/lib/anthropic';
 
 type Category = Database['public']['Tables']['categories']['Row']
 type AIModel = Database['public']['Tables']['ai_models']['Row']
@@ -15,12 +22,28 @@ interface CategoryWithModels extends Category {
 }
 
 export default function Home() {
-  const [categories, setCategories] = useState<CategoryWithModels[]>([])
+  const { toast } = useToast()
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    url: '',
+    category_id: '',
+    description: '',
+    features: '',
+    pros: '',
+    cons: '',
+    pricing: '',
+    api_available: false,
+    home_display: false
+  })
+  const [categories, setCategories] = useState<any[]>([])
+  const [categoriesWithModels, setCategoriesWithModels] = useState<CategoryWithModels[]>([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchCategoriesAndModels()
+    fetchCategories()
   }, [])
 
   const fetchCategoriesAndModels = async () => {
@@ -48,13 +71,76 @@ export default function Home() {
         models: modelsData.filter(model => model.category_id === category.id) || []
       }))
 
-      setCategories(categoriesWithModels)
+      setCategoriesWithModels(categoriesWithModels)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
       setLoading(false)
     }
   }
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('name')
+
+      if (error) throw error
+      setCategories(data || [])
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      toast({
+        variant: "destructive",
+        title: "שגיאה",
+        description: "אירעה שגיאה בטעינת הקטגוריות"
+      })
+    }
+  }
+
+  const generateContent = async () => {
+    if (!formData.name || !formData.url || !formData.category_id) {
+      toast({
+        variant: "destructive",
+        title: "שגיאה",
+        description: "יש למלא שם, כתובת וקטגוריה לפני יצירת תוכן"
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      const category = categories.find(c => c.id === formData.category_id);
+      const content = await generateModelContent({
+        modelName: formData.name,
+        modelUrl: formData.url,
+        category: category?.name || ''
+      });
+
+      setFormData(prev => ({
+        ...prev,
+        description: content.description,
+        pros: content.pros.join('\n'),
+        cons: content.cons.join('\n')
+      }));
+
+      toast({
+        title: "הצלחה",
+        description: "התוכן נוצר בהצלחה"
+      });
+    } catch (error) {
+      console.error('Error generating content:', error);
+      toast({
+        variant: "destructive",
+        title: "שגיאה",
+        description: "אירעה שגיאה ביצירת התוכן"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
@@ -91,7 +177,7 @@ export default function Home() {
           {loading ? (
             <div>טוען...</div>
           ) : (
-            categories.map((category) => (
+            categoriesWithModels.map((category) => (
               <div 
                 key={category.id} 
                 className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px] border border-black/10 dark:border-border"
@@ -148,6 +234,136 @@ export default function Home() {
             ))
           )}
         </div>
+      </div>
+
+      <div className="container mx-auto py-8">
+        <h1 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-purple-600 to-blue-600 text-transparent bg-clip-text">
+          הוספת מודל חדש
+        </h1>
+
+        <form className="max-w-2xl mx-auto space-y-6">
+          <div className="space-y-2">
+            <Label>שם</Label>
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="שם המודל"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>כתובת URL</Label>
+            <Input
+              value={formData.url}
+              onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
+              placeholder="כתובת האתר של המודל"
+              dir="ltr"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>קטגוריה</Label>
+            <Select
+              value={formData.category_id}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="בחר קטגוריה" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>תיאור</Label>
+            <div className="flex gap-2 mb-2">
+              <Button 
+                type="button" 
+                variant="secondary"
+                onClick={generateContent}
+                disabled={isGenerating}
+              >
+                {isGenerating ? 'יוצר תוכן...' : 'צור תוכן אוטומטית'}
+              </Button>
+              <div className="text-sm text-muted-foreground mt-2">
+                יוצר תיאור, יתרונות וחסרונות באמצעות AI
+              </div>
+            </div>
+            <Textarea
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="הזן תיאור של המודל"
+              className="h-32"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>תכונות עיקריות (כל תכונה בשורה חדשה)</Label>
+            <Textarea
+              value={formData.features}
+              onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
+              placeholder="הזן את התכונות העיקריות של המודל"
+              className="h-32"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>יתרונות (כל יתרון בשורה חדשה)</Label>
+            <Textarea
+              value={formData.pros}
+              onChange={(e) => setFormData(prev => ({ ...prev, pros: e.target.value }))}
+              placeholder="הזן את היתרונות של המודל"
+              className="h-32"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>חסרונות (כל חיסרון בשורה חדשה)</Label>
+            <Textarea
+              value={formData.cons}
+              onChange={(e) => setFormData(prev => ({ ...prev, cons: e.target.value }))}
+              placeholder="הזן את החסרונות של המודל"
+              className="h-32"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>תמחור</Label>
+            <Textarea
+              value={formData.pricing}
+              onChange={(e) => setFormData(prev => ({ ...prev, pricing: e.target.value }))}
+              placeholder="הכנס פרטי תמחור בפסקאות"
+              className="h-32"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={formData.api_available}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, api_available: checked }))}
+            />
+            <Label>API זמין</Label>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={formData.home_display}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, home_display: checked }))}
+            />
+            <Label>מוצג בדף הבית</Label>
+          </div>
+
+          <div className="flex gap-4">
+            <Button type="submit">שמור</Button>
+            <Button type="button" variant="outline">ביטול</Button>
+          </div>
+        </form>
       </div>
     </div>
   );

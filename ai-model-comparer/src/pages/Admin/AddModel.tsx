@@ -1,167 +1,228 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { GradientHeading } from '@/components/ui/gradient-heading';
-import { Card, CardContent } from '@/components/ui/card';
-import { ModelData, SECTION_HEADERS } from '@/types/modelTypes';
 import { supabase } from '@/lib/supabase';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useNavigate } from 'react-router-dom';
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MODEL_CATEGORIES } from '@/lib/constants';
+import { generateModelContent } from '@/lib/anthropic';
 
 interface FormData {
-  name: string
-  description: string
-  category: string
-  features: string
-  pros: string
-  cons: string
-  tags: string[]
-  pricing_model: string
-  pricing_type: string
-  api_available: boolean
-  featured: boolean
+  name: string;
+  description: string;
+  features: string;
+  pros: string;
+  cons: string;
+  category: string;
+  pricing_model: string;
+  pricing_type: string;
+  api_available: boolean;
+  featured: boolean;
+  url: string;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  is_active: boolean;
+}
+
+const SECTION_HEADERS = {
+  name: 'שם',
+  description: 'תיאור',
+  features: 'תכונות',
+  pros: 'יתרונות',
+  cons: 'חסרונות',
+  category: 'קטגוריה',
+  url: 'כתובת האתר',
+  pricing: {
+    model: 'מודל תמחור',
+    type: 'סוג תמחור'
+  }
+};
+
 export default function AddModel() {
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
-    category: '',
     features: '',
     pros: '',
     cons: '',
-    tags: [],
+    category: '',
     pricing_model: 'free',
     pricing_type: 'one-time',
     api_available: false,
-    featured: false
+    featured: false,
+    url: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast({
+        variant: "destructive",
+        title: "שגיאה",
+        description: "אירעה שגיאה בטעינת הקטגוריות"
+      });
+    }
   };
 
-  const handleSelectChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleTagsChange = (value: string) => {
-    // Split by comma, trim whitespace, and filter out empty strings
-    const tags = value.split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag !== '');
-    setFormData(prev => ({ ...prev, tags }));
+  const handleInputChange = (field: keyof FormData, value: string | boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
   };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
-    // Required fields
-    const requiredFields = ['name', 'category', 'description', 'features', 'pros', 'cons'] as const;
-    requiredFields.forEach(field => {
-      if (!formData[field]?.trim()) {
-        newErrors[field] = 'שדה חובה';
-      }
-    });
 
-    // Category validation
-    if (!MODEL_CATEGORIES.includes(formData.category)) {
-      newErrors.category = 'קטגוריה לא תקינה';
+    if (!formData.name) {
+      newErrors.name = 'שם המודל הוא שדה חובה';
     }
-
-    // Pricing model validation
-    if (!['free', 'freemium', 'paid', 'enterprise'].includes(formData.pricing_model)) {
-      newErrors.pricing_model = 'מודל תמחור לא תקין';
+    if (!formData.category) {
+      newErrors.category = 'קטגוריה היא שדה חובה';
     }
-
-    // Pricing type validation
-    if (!['one-time', 'subscription', 'usage-based'].includes(formData.pricing_type)) {
-      newErrors.pricing_type = 'סוג תמחור לא תקין';
+    if (!formData.description) {
+      newErrors.description = 'תיאור הוא שדה חובה';
+    }
+    if (!formData.url) {
+      newErrors.url = 'כתובת האתר היא שדה חובה';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
+  const generateContent = async () => {
+    if (!formData.name || !formData.url || !formData.category) {
+      toast({
+        variant: "destructive",
+        title: "שגיאה",
+        description: "יש למלא שם, כתובת וקטגוריה לפני יצירת תוכן"
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      const selectedCategory = categories.find(c => c.id === formData.category);
+      if (!selectedCategory) {
+        throw new Error('קטגוריה לא נמצאה');
+      }
+
+      const content = await generateModelContent({
+        modelName: formData.name,
+        modelUrl: formData.url,
+        category: selectedCategory.name
+      });
+
+      setFormData(prev => ({
+        ...prev,
+        description: content.description,
+        pros: content.pros.join('\n'),
+        cons: content.cons.join('\n')
+      }));
+
+      toast({
+        title: "הצלחה",
+        description: "התוכן נוצר בהצלחה"
+      });
+    } catch (error) {
+      console.error('Error generating content:', error);
+      toast({
+        variant: "destructive",
+        title: "שגיאה",
+        description: "אירעה שגיאה ביצירת התוכן"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!validateForm()) {
       toast({
         variant: "destructive",
         title: "שגיאה",
-        description: "נא למלא את כל שדות החובה"
+        description: "יש למלא את כל שדות החובה"
       });
       return;
     }
 
     setIsLoading(true);
-    try {
-      // Get the current user session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
 
-      // Format the data according to the database schema
+    try {
       const modelData = {
-        name: formData.name.trim(),
-        category: formData.category.trim(),
-        description: formData.description.trim(),
-        features: formData.features.trim(),
-        pros: formData.pros.trim(),
-        cons: formData.cons.trim(),
-        tags: Array.isArray(formData.tags) ? formData.tags : [], // Ensure it's an array
+        name: formData.name,
+        description: formData.description,
+        features: formData.features.split('\n').filter(Boolean),
+        pros: formData.pros.split('\n').filter(Boolean),
+        cons: formData.cons.split('\n').filter(Boolean),
+        category_id: formData.category,
         pricing_model: formData.pricing_model,
         pricing_type: formData.pricing_type,
         api_available: formData.api_available,
-        featured: formData.featured
+        featured: formData.featured,
+        url: formData.url
       };
 
-      console.log('Submitting model data:', modelData);
-
-      // Insert the model data
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('ai_models')
-        .insert([modelData])
-        .select('*');  // Return all columns of the inserted row
+        .insert([modelData]);
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      console.log('Successfully added model:', data);
+      if (error) throw error;
 
       toast({
         title: "הצלחה",
-        description: "המודל נוסף בהצלחה"
+        description: "המודל נשמר בהצלחה"
       });
 
-      navigate('/admin');
+      navigate('/admin/models');
     } catch (error) {
-      console.error('Error adding model:', error);
+      console.error('Error saving model:', error);
       toast({
         variant: "destructive",
         title: "שגיאה",
-        description: error instanceof Error ? error.message : "שגיאה בהוספת המודל"
+        description: "אירעה שגיאה בשמירת המודל"
       });
     } finally {
       setIsLoading(false);
@@ -169,177 +230,134 @@ export default function AddModel() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <GradientHeading as="h1" className="text-4xl text-center mb-12">
-        הוסף מודל חדש
-      </GradientHeading>
-      <Card>
-        <CardContent className="pt-6">
-          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">{SECTION_HEADERS.name}</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  className={errors.name ? 'border-red-500' : ''}
-                />
-                {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-              </div>
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-purple-600 to-blue-600 text-transparent bg-clip-text">
+        הוספת מודל חדש
+      </h1>
 
-              <div>
-                <Label htmlFor="category">{SECTION_HEADERS.category}</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MODEL_CATEGORIES.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
-              </div>
+      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
+        <div className="space-y-2">
+          <Label>{SECTION_HEADERS.name}</Label>
+          <Input
+            value={formData.name}
+            onChange={(e) => handleInputChange('name', e.target.value)}
+            placeholder="שם המודל"
+            className={errors.name ? 'border-red-500' : ''}
+          />
+          {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+        </div>
 
-              <div>
-                <Label htmlFor="description">{SECTION_HEADERS.description}</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  className={errors.description ? 'border-red-500' : ''}
-                />
-                {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
-              </div>
+        <div className="space-y-2">
+          <Label>{SECTION_HEADERS.url}</Label>
+          <Input
+            value={formData.url}
+            onChange={(e) => handleInputChange('url', e.target.value)}
+            placeholder="כתובת האתר של המודל"
+            dir="ltr"
+            className={errors.url ? 'border-red-500' : ''}
+          />
+          {errors.url && <p className="text-red-500 text-sm">{errors.url}</p>}
+        </div>
 
-              <div>
-                <Label htmlFor="features">{SECTION_HEADERS.features}</Label>
-                <Textarea
-                  id="features"
-                  value={formData.features}
-                  onChange={(e) => handleInputChange('features', e.target.value)}
-                  className={errors.features ? 'border-red-500' : ''}
-                  placeholder="הזן כל תכונה בשורה חדשה"
-                />
-                {errors.features && <p className="text-red-500 text-sm">{errors.features}</p>}
-              </div>
+        <div className="space-y-2">
+          <Label>{SECTION_HEADERS.category}</Label>
+          <Select
+            value={formData.category}
+            onValueChange={(value) => handleInputChange('category', value)}
+          >
+            <SelectTrigger className={errors.category ? 'border-red-500' : ''}>
+              <SelectValue placeholder="בחר קטגוריה" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
+        </div>
 
-              <div>
-                <Label htmlFor="pros">{SECTION_HEADERS.pros}</Label>
-                <Textarea
-                  id="pros"
-                  value={formData.pros}
-                  onChange={(e) => handleInputChange('pros', e.target.value)}
-                  className={errors.pros ? 'border-red-500' : ''}
-                  placeholder="הזן כל יתרון בשורה חדשה"
-                />
-                {errors.pros && <p className="text-red-500 text-sm">{errors.pros}</p>}
-              </div>
-
-              <div>
-                <Label htmlFor="cons">{SECTION_HEADERS.cons}</Label>
-                <Textarea
-                  id="cons"
-                  value={formData.cons}
-                  onChange={(e) => handleInputChange('cons', e.target.value)}
-                  className={errors.cons ? 'border-red-500' : ''}
-                  placeholder="הזן כל חיסרון בשורה חדשה"
-                />
-                {errors.cons && <p className="text-red-500 text-sm">{errors.cons}</p>}
-              </div>
-
-              <div>
-                <Label htmlFor="tags">{SECTION_HEADERS.tags}</Label>
-                <Input
-                  id="tags"
-                  value={formData.tags.join(', ')}
-                  onChange={(e) => handleTagsChange(e.target.value)}
-                  placeholder="הפרד תגיות בפסיקים"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="pricing_model">{SECTION_HEADERS.pricing_model}</Label>
-                <Select
-                  value={formData.pricing_model}
-                  onValueChange={(value: 'free' | 'freemium' | 'paid' | 'enterprise') => handleSelectChange('pricing_model', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="free">חינמי</SelectItem>
-                      <SelectItem value="freemium">פרימיום</SelectItem>
-                      <SelectItem value="paid">בתשלום</SelectItem>
-                      <SelectItem value="enterprise">ארגוני</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="pricing_type">{SECTION_HEADERS.pricing_type}</Label>
-                <Select
-                  value={formData.pricing_type}
-                  onValueChange={(value: 'one-time' | 'subscription' | 'usage-based') => handleSelectChange('pricing_type', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="one-time">חד פעמי</SelectItem>
-                      <SelectItem value="subscription">מנוי</SelectItem>
-                      <SelectItem value="usage-based">לפי שימוש</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center px-[25px] py-6 mb-6 rounded-md">
-                <Switch
-                  checked={formData.api_available}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, api_available: checked }))}
-                />
-                <label className="mr-2">API זמין</label>
-              </div>
-
-              <div className="flex items-center px-[25px] py-6 mb-6 rounded-md">
-                <Switch
-                  checked={formData.featured}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, featured: checked }))}
-                />
-                <label className="mr-2">מודל מוצג בדף הבית</label>
-              </div>
-
-              <div className="flex space-x-4 justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/admin')}
-                  type="button"
-                >
-                  ביטול
-                </Button>
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isLoading}
-                  type="button"
-                >
-                  {isLoading ? 'שומר...' : 'שמור'}
-                </Button>
-              </div>
+        <div className="space-y-2">
+          <Label>{SECTION_HEADERS.description}</Label>
+          <div className="flex gap-2 mb-2">
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={generateContent}
+              disabled={isGenerating}
+            >
+              {isGenerating ? 'יוצר תוכן...' : 'צור תוכן אוטומטית'}
+            </Button>
+            <div className="text-sm text-muted-foreground mt-2">
+              יוצר תיאור, יתרונות וחסרונות באמצעות AI
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+          <Textarea
+            value={formData.description}
+            onChange={(e) => handleInputChange('description', e.target.value)}
+            placeholder="הזן תיאור של המודל"
+            className={`h-32 ${errors.description ? 'border-red-500' : ''}`}
+          />
+          {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label>{SECTION_HEADERS.features}</Label>
+          <Textarea
+            value={formData.features}
+            onChange={(e) => handleInputChange('features', e.target.value)}
+            placeholder="הזן את התכונות העיקריות של המודל (כל תכונה בשורה חדשה)"
+            className="h-32"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>{SECTION_HEADERS.pros}</Label>
+          <Textarea
+            value={formData.pros}
+            onChange={(e) => handleInputChange('pros', e.target.value)}
+            placeholder="הזן את היתרונות של המודל (כל יתרון בשורה חדשה)"
+            className="h-32"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>{SECTION_HEADERS.cons}</Label>
+          <Textarea
+            value={formData.cons}
+            onChange={(e) => handleInputChange('cons', e.target.value)}
+            placeholder="הזן את החסרונות של המודל (כל חיסרון בשורה חדשה)"
+            className="h-32"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={formData.api_available}
+            onCheckedChange={(checked) => handleInputChange('api_available', checked)}
+          />
+          <Label>API זמין</Label>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={formData.featured}
+            onCheckedChange={(checked) => handleInputChange('featured', checked)}
+          />
+          <Label>מוצג בדף הבית</Label>
+        </div>
+
+        <div className="flex gap-4">
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? 'שומר...' : 'שמור'}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => navigate('/admin/models')}>
+            ביטול
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }
