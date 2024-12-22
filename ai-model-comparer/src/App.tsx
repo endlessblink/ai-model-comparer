@@ -4,6 +4,7 @@ import Home from '@/pages/Index'
 import ComparisonPage from '@/pages/Compare'
 import Dashboard from '@/pages/Admin/Dashboard'
 import AddModel from '@/pages/Admin/AddModel'
+import EditModel from '@/pages/Admin/EditModel'
 import AdminSetup from '@/pages/Admin/Setup'
 import LoginPage from '@/pages/Login'
 import About from '@/pages/About'
@@ -70,25 +71,25 @@ function App() {
           <Route
             path="/admin"
             element={
-              user ? (
-                isAdmin ? (
-                  <Dashboard />
-                ) : (
-                  <AdminSetup />
-                )
-              ) : (
-                <Navigate to="/login" />
-              )
+              user ? (isAdmin ? <Dashboard /> : <AdminSetup />) : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              user ? (isAdmin ? <Dashboard /> : <AdminSetup />) : <Navigate to="/login" />
             }
           />
           <Route
             path="/admin/add"
             element={
-              user && isAdmin ? (
-                <AddModel />
-              ) : (
-                <Navigate to="/login" />
-              )
+              user ? (isAdmin ? <AddModel /> : <AdminSetup />) : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/admin/edit/:id"
+            element={
+              user ? (isAdmin ? <EditModel /> : <AdminSetup />) : <Navigate to="/login" />
             }
           />
         </Routes>
