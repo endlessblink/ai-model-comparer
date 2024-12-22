@@ -435,38 +435,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Model Comparison Section */}
-      <div className="container mx-auto px-4 py-32">
-        <h2 className="text-4xl font-bold text-center text-black dark:bg-gradient-to-r dark:from-primary dark:to-secondary dark:text-transparent dark:bg-clip-text mb-4">השוואת מודלים</h2>
-        <p className="text-muted-foreground text-center mb-16 text-lg">
-          השווה בין המודלים המובילים בתחום הבינה המלאכותית
-        </p>
-        <div className="flex justify-center">
-          <div className="relative w-full max-w-md">
-            <input 
-              type="text" 
-              placeholder="חיפוש מודלים..."
-              className="w-full px-6 py-4 rounded-2xl bg-card border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-300"
-            />
-            <div className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-r from-primary/0 to-secondary/0 opacity-0 blur transition-all duration-300 group-hover:from-primary/10 group-hover:to-secondary/10 group-hover:opacity-100" />
-          </div>
-        </div>
-        <div className="mt-12 overflow-x-auto scrollbar-hide">
-          <div className="inline-flex gap-4 px-4 pb-4">
-            <button className="px-6 py-3 rounded-2xl bg-primary text-primary-foreground whitespace-nowrap shadow-lg hover:shadow-primary/30 hover:scale-105 transition-all duration-300">
-              מודלי שפה
-            </button>
-            {[/* ... */].map((text) => (
-              <button 
-                key={text}
-                className="px-6 py-3 rounded-2xl bg-card text-muted-foreground whitespace-nowrap hover:text-foreground hover:bg-card/90 transition-all duration-300"
-              >
-                {text}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Footer */}
+      <footer className="container mx-auto px-4 py-8 text-center text-muted-foreground">
+        <p> 2024 AI Model Comparer.  </p>
+      </footer>
     </div>
-  );
+  )
 }
