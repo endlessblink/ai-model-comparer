@@ -185,49 +185,55 @@ export default function Home() {
               categoriesWithModels.map((category) => (
                 <div 
                   key={category.id} 
-                  className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px] border border-black/10 dark:border-border cursor-pointer"
-                  onClick={() => navigate(`/category/${category.id}`)}
+                  className="group relative"
                 >
-                  <div className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-primary/0 via-secondary/0 to-primary/0 opacity-0 blur transition-all duration-500 group-hover:from-primary/20 group-hover:via-secondary/20 group-hover:to-primary/20 group-hover:opacity-100" />
-                  <div className="relative">
-                    <div className="flex items-center gap-4 mb-8">
-                      <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 text-primary">
+                  {/* Background gradient effect */}
+                  <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-r from-primary/0 via-secondary/0 to-primary/0 opacity-0 blur-xl transition-all duration-500 group-hover:from-primary/5 group-hover:via-secondary/5 group-hover:to-primary/5 group-hover:opacity-100" />
+                  
+                  {/* Card content */}
+                  <div className="relative rounded-2xl bg-[#1A1C1E]/90 backdrop-blur-sm p-6 transition-all duration-500 hover:translate-y-[-4px]">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="p-2 rounded-xl bg-[#2A2C2E]">
                         {category.icon ? (
-                          <span className="text-2xl">{category.icon}</span>
+                          <span className="text-xl opacity-80">{category.icon}</span>
                         ) : (
-                          getCategoryIcon(category.name)
+                          <span className="opacity-80">{getCategoryIcon(category.name)}</span>
                         )}
                       </div>
-                      <GradientHeading as="h3" className="text-2xl">
-                        {category.name}
-                      </GradientHeading>
+                      <div className="space-y-1">
+                        <GradientHeading as="h3" className="text-lg font-medium">
+                          {category.name}
+                        </GradientHeading>
+                        <p className="text-sm text-muted-foreground">
+                          {category.description || 'מודלים ליצירת ' + category.name}
+                        </p>
+                      </div>
                     </div>
 
-                    <p className="text-muted-foreground mb-8 text-right">
-                      {category.description}
-                    </p>
-
-                    <div className="border-t border-border pt-8">
-                      <h4 className="text-sm font-medium text-muted-foreground mb-4">מודלים מובילים</h4>
-                      <div className="flex flex-wrap gap-4">
-                        {category.models.slice(0, 2).map((model) => (
-                          <div 
-                            key={model.id} 
-                            className="flex items-center gap-3 bg-card rounded-2xl p-3 flex-1 cursor-pointer hover:bg-accent/50 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/model/${model.id}`);
-                            }}
+                    {/* Featured Models Section */}
+                    <div className="mt-6 space-y-2">
+                      {category.models && category.models.length > 0 ? (
+                        category.models.map((model) => (
+                          <div
+                            key={model.id}
+                            className="flex items-center justify-between p-3 rounded-xl bg-[#0D0F10] border border-white/[0.03] cursor-pointer hover:bg-[#1A1C1E] transition-colors"
+                            onClick={() => navigate(`/model/${model.id}`)}
                           >
-                            <span className="text-sm font-medium text-foreground">{model.name}</span>
+                            <div className="flex items-center gap-3">
+                              <ModelFavicon name={model.name} url={model.url} size={20} className="opacity-80" />
+                              <span className="text-sm text-muted-foreground">
+                                {model.name}
+                              </span>
+                            </div>
                           </div>
-                        ))}
-                        {category.models.length === 0 && (
-                          <p className="text-sm text-muted-foreground">
+                        ))
+                      ) : (
+                        <div className="p-3 rounded-xl bg-[#0D0F10] border border-white/[0.03]">
+                          <span className="text-sm text-muted-foreground">
                             מודלים מובילים יתווספו בקרוב
-                          </p>
-                        )}
-                      </div>
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

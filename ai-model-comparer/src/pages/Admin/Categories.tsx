@@ -9,8 +9,30 @@ import { Switch } from '@/components/ui/switch'
 import { GradientHeading } from "@/components/ui/gradient-heading"
 import Header from '@/components/Header'
 import { Database } from '@/lib/database.types'
+import { Code2, Image, Video, Music, Mic, ScanFace, FileText } from "lucide-react"
 
 type Category = Database['public']['Tables']['categories']['Row']
+
+const getCategoryIcon = (category: string) => {
+  switch (category.toLowerCase()) {
+    case 'video':
+      return <Video className="w-5 h-5" />;
+    case 'image':
+      return <Image className="w-5 h-5" />;
+    case 'text':
+      return <FileText className="w-5 h-5" />;
+    case 'music':
+      return <Music className="w-5 h-5" />;
+    case 'narration':
+      return <Mic className="w-5 h-5" />;
+    case 'lipsync':
+      return <ScanFace className="w-5 h-5" />;
+    case 'code':
+      return <Code2 className="w-5 h-5" />;
+    default:
+      return <FileText className="w-5 h-5" />;
+  }
+};
 
 export default function Categories() {
   const navigate = useNavigate()
@@ -78,37 +100,56 @@ export default function Categories() {
           {categories.map((category) => (
             <div
               key={category.id}
-              className="group relative rounded-3xl bg-card p-8 transition-all duration-500 hover:translate-y-[-4px] border border-black/10 dark:border-border"
+              className="group relative rounded-3xl transition-all duration-500 hover:translate-y-[-4px] cursor-pointer bg-card hover:shadow-[0_0_15px_rgba(124,58,237,0.1)]"
+              onClick={() => navigate(`/admin/categories/${category.id}`)}
             >
-              <div className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-primary/0 via-secondary/0 to-primary/0 opacity-0 blur transition-all duration-500 group-hover:from-primary/20 group-hover:via-secondary/20 group-hover:to-primary/20 group-hover:opacity-100" />
-              <div className="relative">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 text-primary">
-                    <span className="text-2xl">{category.icon || '🔧'}</span>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">{category.name}</h3>
-                    {category.description && (
-                      <p className="text-muted-foreground text-sm mt-1">{category.description}</p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="border-t border-border pt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={category.is_active}
-                        onCheckedChange={() => toggleCategoryStatus(category.id, category.is_active)}
-                      />
-                      <Label className="text-sm">{category.is_active ? 'פעיל' : 'לא פעיל'}</Label>
+              <div className="relative rounded-3xl p-8">
+                <div className="relative">
+                  {/* Header with Category Name and Icon */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xl font-semibold">{category.name}</span>
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/5 via-secondary/10 to-background dark:from-primary/10 dark:via-secondary/15 dark:to-background text-primary shadow-sm">
+                      {category.icon ? (
+                        <span className="text-2xl">{category.icon}</span>
+                      ) : (
+                        getCategoryIcon(category.name)
+                      )}
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate(`/admin/categories/${category.id}`)}
-                    >
-                      ערוך
-                    </Button>
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-muted-foreground text-sm mb-6">
+                    {category.description || 'מודלים ליצירת ' + category.name}
+                  </p>
+
+                  {/* Featured Models Section */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">מודלים מובילים</h4>
+                    <p className="text-sm text-muted-foreground">
+                      מודלים מובילים יתווספו בקרוב
+                    </p>
+                  </div>
+                  
+                  {/* Controls */}
+                  <div className="border-t border-border pt-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={category.is_active}
+                          onCheckedChange={() => toggleCategoryStatus(category.id, category.is_active)}
+                        />
+                        <Label className="text-sm">{category.is_active ? 'פעיל' : 'לא פעיל'}</Label>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/admin/categories/${category.id}`);
+                        }}
+                      >
+                        ערוך
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { GradientHeading } from "@/components/ui/gradient-heading"
 import Header from '@/components/Header'
 import { Database } from '@/lib/database.types'
+import { Code2, Image, Video, Music, Mic, ScanFace, FileText } from "lucide-react"
 
 type CategoryFormData = {
   name: string
@@ -18,15 +19,49 @@ type CategoryFormData = {
   is_active: boolean
 }
 
+const getCategoryIcon = (category: string) => {
+  switch (category.toLowerCase()) {
+    case 'video':
+      return <Video className="w-5 h-5" />;
+    case 'image':
+      return <Image className="w-5 h-5" />;
+    case 'text':
+      return <FileText className="w-5 h-5" />;
+    case 'music':
+      return <Music className="w-5 h-5" />;
+    case 'narration':
+      return <Mic className="w-5 h-5" />;
+    case 'lipsync':
+      return <ScanFace className="w-5 h-5" />;
+    case 'code':
+      return <Code2 className="w-5 h-5" />;
+    default:
+      return <FileText className="w-5 h-5" />;
+  }
+};
+
 // ניתן להרחיב את רשימת האייקונים לפי הצורך
 const availableIcons = [
-  { id: 'video', name: '🎥 וידאו' },
-  { id: 'image', name: '🖼️ תמונות' },
-  { id: 'text', name: '📝 טקסט' },
-  { id: 'lipsync', name: '👄 סנכרון שפתיים' },
-  { id: 'narration', name: '🗣️ הקראה' },
-  { id: 'music', name: '🎵 מוזיקה' },
-  { id: 'code', name: '💻 קוד' },
+  { id: 'text', name: 'טקסט', icon: '📝' },
+  { id: 'video', name: 'וידאו', icon: '🎥' },
+  { id: 'image', name: 'תמונות', icon: '🖼️' },
+  { id: 'narration', name: 'הקראה', icon: '🗣️' },
+  { id: 'lipsync', name: 'סנכרון שפתיים', icon: '👄' },
+  { id: 'music', name: 'מוזיקה', icon: '🎵' },
+  { id: 'code', name: 'קוד', icon: '💻' },
+  { id: 'assistant', name: 'עוזר אישי', icon: '🤖' },
+  { id: 'translation', name: 'תרגום', icon: '🌐' },
+  { id: 'analysis', name: 'ניתוח נתונים', icon: '📊' },
+  { id: 'research', name: 'מחקר', icon: '🔍' },
+  { id: 'writing', name: 'כתיבה', icon: '✍️' },
+  { id: 'art', name: 'אומנות', icon: '🎨' },
+  { id: '3d', name: 'תלת מימד', icon: '🎮' },
+  { id: 'voice', name: 'קול', icon: '🎤' },
+  { id: 'education', name: 'חינוך', icon: '📚' },
+  { id: 'medical', name: 'רפואה', icon: '🏥' },
+  { id: 'gaming', name: 'משחקים', icon: '🎲' },
+  { id: 'robotics', name: 'רובוטיקה', icon: '🦾' },
+  { id: 'security', name: 'אבטחה', icon: '🔒' }
 ]
 
 export default function EditCategory() {
@@ -56,15 +91,16 @@ export default function EditCategory() {
           .single()
 
         if (error) throw error
-        if (!data) throw new Error('Category not found')
-
-        setFormData({
-          name: data.name,
-          description: data.description || '',
-          icon: data.icon,
-          is_active: data.is_active,
-        })
+        if (data) {
+          setFormData({
+            name: data.name,
+            description: data.description || '',
+            icon: data.icon || 'text',
+            is_active: data.is_active,
+          })
+        }
       } catch (err) {
+        console.error('Error fetching category:', err)
         setError(err instanceof Error ? err.message : 'Failed to fetch category')
       } finally {
         setLoading(false)
@@ -76,13 +112,11 @@ export default function EditCategory() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-
     try {
       const categoryData = {
-        name: formData.name.trim(),
-        description: formData.description.trim() || null,
-        icon: formData.icon,
+        name: formData.name,
+        description: formData.description,
+        icon: availableIcons.find(icon => icon.id === formData.icon)?.icon || '📝',
         is_active: formData.is_active,
       }
 
@@ -115,59 +149,73 @@ export default function EditCategory() {
     <div className="min-h-screen">
       <Header />
       <div className="container mx-auto py-8 px-4">
-        <GradientHeading as="h1" className="text-4xl text-center mb-12">
-          {id ? 'עריכת קטגוריה' : 'יצירת קטגוריה חדשה'}
+        <GradientHeading as="h1" className="text-4xl mb-8">
+          {id ? 'עריכת קטגוריה' : 'קטגוריה חדשה'}
         </GradientHeading>
-        <form onSubmit={handleSubmit} className="space-y-8 max-w-xl mx-auto">
-          <div>
-            <Label>שם הקטגוריה</Label>
-            <Input
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              required
-              dir="rtl"
-            />
-          </div>
 
-          <div>
-            <Label>תיאור</Label>
-            <Textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              dir="rtl"
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-8 max-w-xl">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="name">שם</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
 
-          <div>
-            <Label>אייקון</Label>
-            <Select 
-              value={formData.icon}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, icon: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="בחר אייקון" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableIcons.map((icon) => (
-                  <SelectItem key={icon.id} value={icon.id}>
-                    {icon.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div>
+              <Label htmlFor="description">תיאור</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+            </div>
 
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={formData.is_active}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-            />
-            <Label>קטגוריה פעילה</Label>
+            <div>
+              <Label>אייקון</Label>
+              <Select
+                value={formData.icon}
+                onValueChange={(value) => setFormData({ ...formData, icon: value })}
+              >
+                <SelectTrigger className="bg-transparent border-0">
+                  <SelectValue>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">
+                        {availableIcons.find(icon => icon.id === formData.icon)?.icon || '📝'}
+                      </span>
+                      <span>{availableIcons.find(icon => icon.id === formData.icon)?.name || 'בחר אייקון'}</span>
+                    </div>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-transparent">
+                  {availableIcons.map((icon) => (
+                    <SelectItem key={icon.id} value={icon.id} className="bg-transparent">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{icon.icon}</span>
+                        <span>{icon.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Switch
+                id="is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              />
+              <Label htmlFor="is_active">פעיל</Label>
+            </div>
           </div>
 
           <div className="flex gap-4">
             <Button type="submit">
-              {id ? 'שמור שינויים' : 'צור קטגוריה'}
+              {id ? 'עדכן' : 'צור'} קטגוריה
             </Button>
             <Button type="button" variant="outline" onClick={() => navigate('/admin/categories')}>
               ביטול
