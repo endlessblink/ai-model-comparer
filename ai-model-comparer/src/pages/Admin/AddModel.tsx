@@ -46,7 +46,10 @@ export default function AddModel() {
   };
 
   const handleTagsChange = (value: string) => {
-    const tags = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+    // Split by comma, trim whitespace, and filter out empty strings
+    const tags = value.split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag !== '');
     setFormData(prev => ({ ...prev, tags }));
   };
 
@@ -107,7 +110,7 @@ export default function AddModel() {
         features: formData.features.trim(),
         pros: formData.pros.trim(),
         cons: formData.cons.trim(),
-        tags: formData.tags,
+        tags: Array.isArray(formData.tags) ? formData.tags : [], // Ensure it's an array
         pricing_model: formData.pricing_model,
         pricing_type: formData.pricing_type,
         api_available: formData.api_available
@@ -118,11 +121,12 @@ export default function AddModel() {
       // Insert the model data
       const { data, error } = await supabase
         .from('ai_models')
-        .insert([modelData]);
+        .insert([modelData])
+        .select('*');  // Return all columns of the inserted row
 
       if (error) {
         console.error('Supabase error:', error);
-        throw new Error(error.message);
+        throw error;
       }
 
       console.log('Successfully added model:', data);
