@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
 import { AIModel, ModelCategory } from '@/data/models'
 import { supabase } from '@/lib/supabase'
+import { GradientHeading } from '@/components/ui/gradient-heading'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -113,9 +114,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto py-8 px-4">
+      <GradientHeading as="h1" className="text-4xl text-center mb-12">
+        ניהול מודלים
+      </GradientHeading>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">ניהול מודלים</h1>
         <Button onClick={handleAddModel}>
           הוסף מודל חדש
         </Button>

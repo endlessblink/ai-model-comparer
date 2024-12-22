@@ -3,9 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { GradientHeading } from "@/components/ui/gradient-heading"
 import Header from '@/components/Header'
 import { MODEL_CATEGORIES } from '@/lib/constants'
 
@@ -20,6 +22,7 @@ interface ModelFormData {
   pricing_model: string;
   pricing_type: string;
   api_available: boolean;
+  featured: boolean;
 }
 
 export default function EditModel() {
@@ -36,6 +39,7 @@ export default function EditModel() {
     pricing_model: 'free',
     pricing_type: 'one-time',
     api_available: false,
+    featured: false,
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -91,6 +95,7 @@ export default function EditModel() {
         pricing_model: formData.pricing_model,
         pricing_type: formData.pricing_type,
         api_available: formData.api_available,
+        featured: formData.featured,
       }
 
       const { error } = await supabase
@@ -113,8 +118,10 @@ export default function EditModel() {
   return (
     <div className="min-h-screen">
       <Header />
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">עריכת מודל AI</h1>
+      <div className="container mx-auto py-8 px-4">
+        <GradientHeading as="h1" className="text-4xl text-center mb-12">
+          עדכן מודל
+        </GradientHeading>
         <form onSubmit={handleSubmit} className="space-y-8">
           <div>
             <label className="block mb-2">שם:</label>
@@ -246,6 +253,14 @@ export default function EditModel() {
                 onCheckedChange={(checked) => setFormData(prev => ({ ...prev, api_available: checked }))}
               />
               <label className="mr-2">API זמין</label>
+            </div>
+
+            <div className="flex items-center px-[25px] py-6 mb-6 rounded-md">
+              <Switch
+                checked={formData.featured}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, featured: checked }))}
+              />
+              <label className="mr-2">מודל מוצג בדף הבית</label>
             </div>
 
             <div className="inline-flex items-center justify-center gap-2 whitespace-nowrap">

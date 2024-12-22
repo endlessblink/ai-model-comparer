@@ -4,6 +4,8 @@ import { Database } from './database.types';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+console.log('Initializing Supabase with URL:', supabaseUrl);
+
 if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables');
 }
@@ -14,6 +16,16 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
     autoRefreshToken: true,
   },
 });
+
+// Test the connection
+supabase.from('ai_models').select('count').single()
+  .then(({ error }) => {
+    if (error) {
+      console.error('Supabase connection error:', error);
+    } else {
+      console.log('Supabase connection successful');
+    }
+  });
 
 export interface AIModel {
   id: number
@@ -51,6 +63,7 @@ export async function getModels() {
     
     // Ensure arrays are properly initialized
     return (data || []).map(model => ({
+
       ...model,
       features: model.features || [],
       disadvantages: model.disadvantages || [],
