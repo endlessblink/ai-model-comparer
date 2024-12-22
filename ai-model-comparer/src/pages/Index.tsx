@@ -15,7 +15,7 @@ export default function Home() {
         </div>
         
         <div className="relative">
-          <h1 className="text-6xl font-bold text-black dark:bg-gradient-to-r dark:from-primary dark:via-secondary dark:to-primary dark:text-transparent dark:bg-clip-text tracking-tight mb-8">
+          <h1 className="text-6xl font-bold text-black dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-[#a78bfa] dark:via-[#818cf8] dark:to-[#a78bfa] tracking-tight mb-8">
             גלה את עולם הבינה המלאכותית
           </h1>
           <p className="text-muted-foreground text-xl mb-12 max-w-2xl mx-auto leading-relaxed">
@@ -38,7 +38,7 @@ export default function Home() {
 
       {/* Model Types Section */}
       <div className="container mx-auto px-4 py-32">
-        <h2 className="text-4xl font-bold text-center text-black dark:bg-gradient-to-r dark:from-primary dark:to-secondary dark:text-transparent dark:bg-clip-text mb-4">סוגי מודלים</h2>
+        <h2 className="text-4xl font-bold text-center text-black dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-[#a78bfa] dark:via-[#818cf8] dark:to-[#a78bfa] mb-4">סוגי מודלים</h2>
         <p className="text-muted-foreground text-center mb-16 text-lg">גלה את המגוון הרחב של מודלי AI המתקדמים ביותר</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Code Models */}
@@ -406,7 +406,7 @@ export default function Home() {
 
       {/* Interactive Demos Section */}
       <div className="container mx-auto px-4 py-32">
-        <h2 className="text-4xl font-bold text-center text-black dark:bg-gradient-to-r dark:from-primary dark:to-secondary dark:text-transparent dark:bg-clip-text mb-4">הדגמות אינטראקטיביות</h2>
+        <h2 className="text-4xl font-bold text-center text-black dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-[#a78bfa] dark:via-[#818cf8] dark:to-[#a78bfa] mb-4">הדגמות אינטראקטיביות</h2>
         <p className="text-muted-foreground text-center mb-16 text-lg">
           נסה בעצמך את היכולות של מודלים שונים
         </p>
