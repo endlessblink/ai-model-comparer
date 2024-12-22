@@ -5,12 +5,16 @@ import ComparisonPage from '@/pages/Compare'
 import Dashboard from '@/pages/Admin/Dashboard'
 import AddModel from '@/pages/Admin/AddModel'
 import EditModel from '@/pages/Admin/EditModel'
+import Models from '@/pages/Admin/Models'
 import AdminSetup from '@/pages/Admin/Setup'
 import LoginPage from '@/pages/Login'
 import About from '@/pages/About'
 import Header from '@/components/Header'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import Admin from '@/pages/Admin'
+import Categories from '@/pages/Admin/Categories'
+import EditCategory from '@/pages/Admin/EditCategory'
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(false)
@@ -75,9 +79,39 @@ function App() {
             }
           />
           <Route
-            path="/admin/dashboard"
+            path="/admin/categories"
             element={
-              user ? (isAdmin ? <Dashboard /> : <AdminSetup />) : <Navigate to="/login" />
+              user ? (isAdmin ? <Categories /> : <AdminSetup />) : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/admin/categories/new"
+            element={
+              user ? (isAdmin ? <EditCategory /> : <AdminSetup />) : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/admin/categories/:id"
+            element={
+              user ? (isAdmin ? <EditCategory /> : <AdminSetup />) : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/admin/models"
+            element={
+              user ? (isAdmin ? <Models /> : <AdminSetup />) : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/admin/models/new"
+            element={
+              user ? (isAdmin ? <EditModel /> : <AdminSetup />) : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/admin/models/:id"
+            element={
+              user ? (isAdmin ? <EditModel /> : <AdminSetup />) : <Navigate to="/login" />
             }
           />
           <Route

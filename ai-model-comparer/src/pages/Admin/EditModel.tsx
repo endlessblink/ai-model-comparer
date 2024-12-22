@@ -9,42 +9,66 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { GradientHeading } from "@/components/ui/gradient-heading"
 import Header from '@/components/Header'
-import { MODEL_CATEGORIES } from '@/lib/constants'
+import { Database } from '@/lib/database.types'
 
-interface ModelFormData {
-  name: string;
-  category: string;
-  description: string;
-  features: string;
-  pros: string;
-  cons: string;
-  tags: string[];
-  pricing_model: string;
-  pricing_type: string;
-  api_available: boolean;
-  featured: boolean;
+type ModelFormData = {
+  name: string
+  description: string
+  category_id: string
+  pros: string
+  cons: string
+  favicon: string
+  show_in_home: boolean
 }
+
+type Category = Database['public']['Tables']['categories']['Row']
 
 export default function EditModel() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState<ModelFormData>({
     name: '',
-    category: '',
     description: '',
-    features: '',
+    category_id: '',
     pros: '',
     cons: '',
-    tags: [],
-    pricing_model: 'free',
-    pricing_type: 'one-time',
-    api_available: false,
-    featured: false,
+    favicon: '',
+    show_in_home: false,
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .order('name')
+
+        if (error) throw error
+        setCategories(data || [])
+
+        // אם אין קטגוריה נבחרת ויש קטגוריות, נבחר את הראשונה כברירת מחדל
+        if (!formData.category_id && data && data.length > 0) {
+          setFormData(prev => ({ ...prev, category_id: data[0].id }))
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch categories')
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  useEffect(() => {
+    if (!id) {
+      setLoading(false)
+      return
+    }
+
     const fetchModel = async () => {
       try {
         const { data, error } = await supabase
@@ -56,7 +80,15 @@ export default function EditModel() {
         if (error) throw error
         if (!data) throw new Error('Model not found')
 
-        setFormData(data)
+        setFormData({
+          name: data.name,
+          description: data.description,
+          category_id: data.category_id || '',
+          pros: data.pros || '',
+          cons: data.cons || '',
+          favicon: data.favicon || '',
+          show_in_home: data.show_in_home,
+        })
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch model')
       } finally {
@@ -67,18 +99,6 @@ export default function EditModel() {
     fetchModel()
   }, [id])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleTagsChange = (value: string) => {
-    const tags = value.split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag !== '')
-    setFormData(prev => ({ ...prev, tags }))
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -86,29 +106,33 @@ export default function EditModel() {
     try {
       const modelData = {
         name: formData.name.trim(),
-        category: formData.category.trim(),
         description: formData.description.trim(),
-        features: formData.features.trim(),
-        pros: formData.pros.trim(),
-        cons: formData.cons.trim(),
-        tags: formData.tags || [],
-        pricing_model: formData.pricing_model,
-        pricing_type: formData.pricing_type,
-        api_available: formData.api_available,
-        featured: formData.featured,
+        category_id: formData.category_id,
+        pros: formData.pros.trim() || null,
+        cons: formData.cons.trim() || null,
+        favicon: formData.favicon.trim() || null,
+        show_in_home: formData.show_in_home,
       }
 
-      const { error } = await supabase
-        .from('ai_models')
-        .update(modelData)
-        .eq('id', id)
+      if (id) {
+        const { error } = await supabase
+          .from('ai_models')
+          .update(modelData)
+          .eq('id', id)
 
-      if (error) throw error
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('ai_models')
+          .insert([modelData])
 
-      navigate('/admin/dashboard')
+        if (error) throw error
+      }
+
+      navigate('/admin/models')
     } catch (err) {
-      console.error('Error updating model:', err)
-      setError(err instanceof Error ? err.message : 'Failed to update model')
+      console.error('Error saving model:', err)
+      setError(err instanceof Error ? err.message : 'Failed to save model')
     }
   }
 
@@ -120,35 +144,32 @@ export default function EditModel() {
       <Header />
       <div className="container mx-auto py-8 px-4">
         <GradientHeading as="h1" className="text-4xl text-center mb-12">
-          עדכן מודל
+          {id ? 'עריכת מודל' : 'יצירת מודל חדש'}
         </GradientHeading>
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8 max-w-xl mx-auto">
           <div>
-            <label className="block mb-2">שם:</label>
+            <Label>שם המודל</Label>
             <Input
-              type="text"
-              name="name"
               value={formData.name}
-              onChange={handleInputChange}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               required
               dir="rtl"
             />
           </div>
 
           <div>
-            <label className="block mb-2">קטגוריה:</label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-              dir="rtl"
+            <Label>קטגוריה</Label>
+            <Select 
+              value={formData.category_id}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="בחר קטגוריה" />
               </SelectTrigger>
               <SelectContent>
-                {MODEL_CATEGORIES.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -156,121 +177,61 @@ export default function EditModel() {
           </div>
 
           <div>
-            <label className="block mb-2">תיאור:</label>
+            <Label>תיאור</Label>
             <Textarea
-              name="description"
               value={formData.description}
-              onChange={handleInputChange}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               required
               dir="rtl"
             />
           </div>
 
           <div>
-            <label className="block mb-2">תכונות:</label>
+            <Label>יתרונות</Label>
             <Textarea
-              name="features"
-              value={formData.features}
-              onChange={handleInputChange}
-              required
-              dir="rtl"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2">יתרונות:</label>
-            <Textarea
-              name="pros"
               value={formData.pros}
-              onChange={handleInputChange}
-              required
+              onChange={(e) => setFormData(prev => ({ ...prev, pros: e.target.value }))}
               dir="rtl"
+              placeholder="הזן את היתרונות של המודל"
             />
           </div>
 
           <div>
-            <label className="block mb-2">חסרונות:</label>
+            <Label>חסרונות</Label>
             <Textarea
-              name="cons"
               value={formData.cons}
-              onChange={handleInputChange}
-              required
+              onChange={(e) => setFormData(prev => ({ ...prev, cons: e.target.value }))}
               dir="rtl"
+              placeholder="הזן את החסרונות של המודל"
             />
           </div>
 
           <div>
-            <label className="block mb-2">תגיות (מופרדות בפסיקים):</label>
+            <Label>Favicon URL</Label>
             <Input
-              type="text"
-              value={formData.tags.join(', ')}
-              onChange={(e) => handleTagsChange(e.target.value)}
-              dir="rtl"
+              type="url"
+              value={formData.favicon}
+              onChange={(e) => setFormData(prev => ({ ...prev, favicon: e.target.value }))}
+              dir="ltr"
+              placeholder="הכנס כתובת URL של האייקון"
             />
           </div>
 
-          <div>
-            <label className="block mb-2">מודל תמחור:</label>
-            <Select
-              value={formData.pricing_model}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, pricing_model: value }))}
-              dir="rtl"
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="free">חינמי</SelectItem>
-                <SelectItem value="freemium">חינמי עם הגבלות</SelectItem>
-                <SelectItem value="paid">בתשלום</SelectItem>
-                <SelectItem value="enterprise">ארגוני</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={formData.show_in_home}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, show_in_home: checked }))}
+            />
+            <Label>הצג בדף הבית</Label>
           </div>
 
-          <div>
-            <label className="block mb-2">סוג תמחור:</label>
-            <Select
-              value={formData.pricing_type}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, pricing_type: value }))}
-              dir="rtl"
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="one-time">חד פעמי</SelectItem>
-                <SelectItem value="subscription">מנוי</SelectItem>
-                <SelectItem value="usage-based">לפי שימוש</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-8">
-            <div className="flex items-center px-[25px] py-6 mb-6 rounded-md">
-              <Switch
-                checked={formData.api_available}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, api_available: checked }))}
-              />
-              <label className="mr-2">API זמין</label>
-            </div>
-
-            <div className="flex items-center px-[25px] py-6 mb-6 rounded-md">
-              <Switch
-                checked={formData.featured}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, featured: checked }))}
-              />
-              <label className="mr-2">מודל מוצג בדף הבית</label>
-            </div>
-
-            <div className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
-              <Button type="button" variant="outline" onClick={() => navigate('/admin/dashboard')} className="px-4 py-2">
-                ביטול
-              </Button>
-              <Button type="submit" className="px-4 py-2">
-                עדכן מודל
-              </Button>
-            </div>
+          <div className="flex gap-4">
+            <Button type="submit">
+              {id ? 'שמור שינויים' : 'צור מודל'}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => navigate('/admin/models')}>
+              ביטול
+            </Button>
           </div>
         </form>
       </div>

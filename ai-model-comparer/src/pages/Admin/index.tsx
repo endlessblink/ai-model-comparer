@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { GradientHeading } from "@/components/ui/gradient-heading"
 import Header from '@/components/Header'
 
-export default function Dashboard() {
+export default function Admin() {
   const navigate = useNavigate()
 
   return (
@@ -20,14 +20,9 @@ export default function Dashboard() {
             <p className="text-muted-foreground mb-4">
               יצירה, עריכה והפעלה/כיבוי של קטגוריות מודלים
             </p>
-            <div className="flex gap-4">
-              <Button onClick={() => navigate('/admin/categories/new')}>
-                צור קטגוריה חדשה
-              </Button>
-              <Button variant="outline" onClick={() => navigate('/admin/categories')}>
-                נהל קטגוריות
-              </Button>
-            </div>
+            <Button onClick={() => navigate('/admin/categories')}>
+              נהל קטגוריות
+            </Button>
           </div>
 
           <div className="bg-card p-6 rounded-lg shadow-sm">
@@ -37,10 +32,10 @@ export default function Dashboard() {
             </p>
             <div className="flex gap-4">
               <Button onClick={() => navigate('/admin/models/new')}>
-                צור מודל חדש
+                הוסף מודל חדש
               </Button>
               <Button variant="outline" onClick={() => navigate('/admin/models')}>
-                נהל מודלים
+                צפה במודלים
               </Button>
             </div>
           </div>
