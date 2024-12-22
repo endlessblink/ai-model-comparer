@@ -5,6 +5,8 @@ import ComparisonPage from '@/pages/Compare'
 import Dashboard from '@/pages/Admin/Dashboard'
 import AddModel from '@/pages/Admin/AddModel'
 import AdminSetup from '@/pages/Admin/Setup'
+import LoginPage from '@/pages/Login'
+import About from '@/pages/About'
 import Header from '@/components/Header'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -55,48 +57,44 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <Header />
-      <main className="container mx-auto p-4 mt-16">
+      <main className="min-h-screen pt-14">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/compare" element={<ComparisonPage />} />
-          <Route 
-            path="/admin" 
-            element={isAdmin ? <Dashboard /> : <Navigate to="/" />} 
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/about" element={<About />} />
+          
+          {/* Protected Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              user ? (
+                isAdmin ? (
+                  <Dashboard />
+                ) : (
+                  <AdminSetup />
+                )
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
           />
-          <Route 
-            path="/admin/add" 
-            element={isAdmin ? <AddModel /> : <Navigate to="/" />} 
+          <Route
+            path="/admin/add"
+            element={
+              user && isAdmin ? (
+                <AddModel />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
           />
-          <Route 
-            path="/admin/setup" 
-            element={isAdmin ? <AdminSetup /> : <Navigate to="/" />} 
-          />
-          <Route path="/about" element={(
-            <div className="container mx-auto px-4 py-8">
-              <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-blue-400 to-purple-400 inline-block text-transparent bg-clip-text">
-                אודות
-              </h1>
-              <p className="text-gray-400">
-                עמוד זה בבנייה...
-              </p>
-            </div>
-          )} />
-          <Route path="/contact" element={(
-            <div className="container mx-auto px-4 py-8">
-              <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-blue-400 to-purple-400 inline-block text-transparent bg-clip-text">
-                צור קשר
-              </h1>
-              <p className="text-gray-400">
-                עמוד זה בבנייה...
-              </p>
-            </div>
-          )} />
         </Routes>
       </main>
       <Toaster />
-    </div>
+    </>
   )
 }
 
