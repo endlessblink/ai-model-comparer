@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { generateModelContent } from '@/lib/anthropic';
+import { getFavicon } from '@/lib/anthropic';
 
 interface FormData {
   name: string;
@@ -28,6 +29,7 @@ interface FormData {
   api_available: boolean;
   featured: boolean;
   url: string;
+  favicon: string;
 }
 
 interface Category {
@@ -67,7 +69,8 @@ export default function AddModel() {
     pricing_type: 'one-time',
     api_available: false,
     featured: false,
-    url: ''
+    url: '',
+    favicon: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -106,6 +109,22 @@ export default function AddModel() {
         ...prev,
         [field]: ''
       }));
+    }
+  };
+
+  const handleUrlChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    setFormData(prev => ({ ...prev, url }));
+    
+    if (url) {
+      try {
+        const favicon = await getFavicon(url);
+        if (favicon) {
+          setFormData(prev => ({ ...prev, favicon }));
+        }
+      } catch (error) {
+        console.error('Error fetching favicon:', error);
+      }
     }
   };
 
@@ -178,17 +197,33 @@ export default function AddModel() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      toast({
+        variant: "destructive",
+        title: "שגיאה",
+        description: "יש למלא את כל שדות החובה"
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const modelData = {
-        name: formData.name,
-        description: formData.description,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        category: formData.category,
         category_id: formData.category,
-        pros: formData.pros.split('\n').filter(Boolean),
-        cons: formData.cons.split('\n').filter(Boolean),
+        features: formData.features.trim(),
+        pros: formData.pros.trim(),
+        cons: formData.cons.trim(),
+        pricing_model: formData.pricing_model,
+        pricing_type: formData.pricing_type,
+        api_available: formData.api_available,
         show_in_home: formData.featured,
-        url: formData.url
+        url: formData.url.trim(),
+        favicon: formData.favicon
       };
 
       const { error } = await supabase
@@ -233,16 +268,32 @@ export default function AddModel() {
           {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
         </div>
 
-        <div className="space-y-2">
+        <div>
           <Label>{SECTION_HEADERS.url}</Label>
           <Input
             value={formData.url}
-            onChange={(e) => handleInputChange('url', e.target.value)}
-            placeholder="כתובת האתר של המודל"
+            onChange={handleUrlChange}
             dir="ltr"
+            placeholder="כתובת האתר של המודל"
             className={errors.url ? 'border-red-500' : ''}
           />
           {errors.url && <p className="text-red-500 text-sm">{errors.url}</p>}
+        </div>
+
+        <div>
+          <Label>פאביקון</Label>
+          <Input
+            value={formData.favicon}
+            onChange={(e) => setFormData(prev => ({ ...prev, favicon: e.target.value }))}
+            dir="ltr"
+            placeholder="כתובת הפאביקון (יתמלא אוטומטית)"
+            disabled
+          />
+          {formData.favicon && (
+            <div className="mt-2">
+              <img src={formData.favicon} alt="favicon" className="w-6 h-6" />
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">

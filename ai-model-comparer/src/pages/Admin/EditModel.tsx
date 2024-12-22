@@ -1,27 +1,38 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/lib/supabase';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { GradientHeading } from "@/components/ui/gradient-heading"
-import Header from '@/components/Header'
-import { Database } from '@/lib/database.types'
-import { generateModelContent } from '@/lib/anthropic'
-import { useToast } from '@/components/ui/use-toast'
+import Header from '@/components/Header';
+import { Database } from '@/lib/database.types';
+import { generateModelContent } from '@/lib/anthropic';
+import { getFavicon } from '@/lib/anthropic';
 
 type ModelFormData = {
   name: string
   description: string
   category_id: string
+  features: string
   pros: string
   cons: string
   favicon: string
   show_in_home: boolean
   url: string
+  pricing_model: string
+  pricing_type: string
+  api_available: boolean
 }
 
 type Category = Database['public']['Tables']['categories']['Row']
@@ -35,15 +46,20 @@ export default function EditModel() {
     name: '',
     description: '',
     category_id: '',
+    features: '',
     pros: '',
     cons: '',
     favicon: '',
     show_in_home: false,
-    url: ''
+    url: '',
+    pricing_model: '',
+    pricing_type: '',
+    api_available: false
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -90,11 +106,15 @@ export default function EditModel() {
           name: data.name,
           description: data.description,
           category_id: data.category_id || '',
-          pros: data.pros || '',
-          cons: data.cons || '',
+          features: data.features ? data.features.join('\n') : '',
+          pros: data.pros ? data.pros.join('\n') : '',
+          cons: data.cons ? data.cons.join('\n') : '',
           favicon: data.favicon || '',
           show_in_home: data.show_in_home,
-          url: data.url || ''
+          url: data.url || '',
+          pricing_model: data.pricing_model || '',
+          pricing_type: data.pricing_type || '',
+          api_available: data.api_available || false
         })
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch model')
@@ -108,18 +128,23 @@ export default function EditModel() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
+    setIsSaving(true)
 
     try {
       const modelData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
+        category: formData.category_id,
         category_id: formData.category_id,
-        pros: formData.pros.trim() || null,
-        cons: formData.cons.trim() || null,
-        favicon: formData.favicon.trim() || null,
+        features: formData.features.trim(),
+        pros: formData.pros.trim(),
+        cons: formData.cons.trim(),
+        pricing_model: formData.pricing_model,
+        pricing_type: formData.pricing_type,
+        api_available: formData.api_available,
         show_in_home: formData.show_in_home,
-        url: formData.url.trim() || null
+        url: formData.url.trim(),
+        favicon: formData.favicon
       }
 
       if (id) {
@@ -144,7 +169,13 @@ export default function EditModel() {
       navigate('/admin/models')
     } catch (err) {
       console.error('Error saving model:', err)
-      setError(err instanceof Error ? err.message : 'Failed to save model')
+      toast({
+        variant: "destructive",
+        title: "שגיאה",
+        description: "אירעה שגיאה בשמירת המודל"
+      })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -171,6 +202,7 @@ export default function EditModel() {
       setFormData(prev => ({
         ...prev,
         description: content.description,
+        features: content.features.join('\n'),
         pros: content.pros.join('\n'),
         cons: content.cons.join('\n')
       }));
@@ -188,6 +220,22 @@ export default function EditModel() {
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleUrlChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    setFormData(prev => ({ ...prev, url }));
+    
+    if (url) {
+      try {
+        const favicon = await getFavicon(url);
+        if (favicon) {
+          setFormData(prev => ({ ...prev, favicon }));
+        }
+      } catch (error) {
+        console.error('Error fetching favicon:', error);
+      }
     }
   };
 
@@ -216,10 +264,26 @@ export default function EditModel() {
             <Label>כתובת URL</Label>
             <Input
               value={formData.url}
-              onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
-              required
+              onChange={handleUrlChange}
               dir="ltr"
+              placeholder="הזן את כתובת האתר של המודל"
             />
+          </div>
+
+          <div>
+            <Label>פאביקון</Label>
+            <Input
+              value={formData.favicon}
+              onChange={(e) => setFormData(prev => ({ ...prev, favicon: e.target.value }))}
+              dir="ltr"
+              placeholder="כתובת הפאביקון (יתמלא אוטומטית)"
+              disabled
+            />
+            {formData.favicon && (
+              <div className="mt-2">
+                <img src={formData.favicon} alt="favicon" className="w-6 h-6" />
+              </div>
+            )}
           </div>
 
           <div>
@@ -253,7 +317,7 @@ export default function EditModel() {
                 {isGenerating ? 'יוצר תוכן...' : 'צור תוכן אוטומטית'}
               </Button>
               <div className="text-sm text-muted-foreground mt-2">
-                יוצר תיאור, יתרונות וחסרונות באמצעות AI
+                יוצר תיאור, יתרונות, חסרונות ותכונות באמצעות AI
               </div>
             </div>
             <Textarea
@@ -261,6 +325,16 @@ export default function EditModel() {
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="הזן תיאור של המודל"
               className="h-32"
+            />
+          </div>
+
+          <div>
+            <Label>תכונות</Label>
+            <Textarea
+              value={formData.features}
+              onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
+              dir="rtl"
+              placeholder="הזן את התכונות של המודל"
             />
           </div>
 
@@ -285,14 +359,31 @@ export default function EditModel() {
           </div>
 
           <div>
-            <Label>Favicon URL</Label>
+            <Label>מודל מחיר</Label>
             <Input
-              type="url"
-              value={formData.favicon}
-              onChange={(e) => setFormData(prev => ({ ...prev, favicon: e.target.value }))}
-              dir="ltr"
-              placeholder="הכנס כתובת URL של האייקון"
+              value={formData.pricing_model}
+              onChange={(e) => setFormData(prev => ({ ...prev, pricing_model: e.target.value }))}
+              dir="rtl"
+              placeholder="הזן את מודל המחיר"
             />
+          </div>
+
+          <div>
+            <Label>סוג מחיר</Label>
+            <Input
+              value={formData.pricing_type}
+              onChange={(e) => setFormData(prev => ({ ...prev, pricing_type: e.target.value }))}
+              dir="rtl"
+              placeholder="הזן את סוג המחיר"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={formData.api_available}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, api_available: checked }))}
+            />
+            <Label>API זמין</Label>
           </div>
 
           <div className="flex items-center gap-2">
@@ -304,7 +395,7 @@ export default function EditModel() {
           </div>
 
           <div className="flex gap-4">
-            <Button type="submit">
+            <Button type="submit" disabled={isSaving}>
               {id ? 'שמור שינויים' : 'צור מודל'}
             </Button>
             <Button type="button" variant="outline" onClick={() => navigate('/admin/models')}>
